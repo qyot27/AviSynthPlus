@@ -44,6 +44,9 @@
 #ifdef INTEL_INTRINSICS
 #include "intel/convert_sse.h"
 #include "intel/convert_yuy2_sse.h"
+#else
+#include "simde/convert_sse.h"
+#include "simde/convert_yuy2_sse.h"
 #endif
 
 #include <avs/alignment.h>

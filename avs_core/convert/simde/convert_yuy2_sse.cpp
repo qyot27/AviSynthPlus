@@ -34,7 +34,8 @@
 
 #include <avisynth.h>
 #include "../convert_matrix.h"
-#include <emmintrin.h>
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
 
 template<int rgb_bytes>
 static void convert_rgb_line_to_yuy2_sse2(const BYTE *srcp, BYTE *dstp, int width, const ConversionMatrix& matrix) {

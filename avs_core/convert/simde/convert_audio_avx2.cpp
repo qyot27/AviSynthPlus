@@ -8,7 +8,8 @@
 
 #include <avs/types.h>
 #include <avs/config.h>
-#include <immintrin.h> // AVX2 at most
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/avx2.h> // AVX2 at most
 
 // Easy: 32-16, 16-32
 // Float: 8/16/32-FLT, FLT-8/16/32

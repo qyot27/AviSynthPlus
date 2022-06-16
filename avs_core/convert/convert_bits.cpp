@@ -36,6 +36,9 @@
 #ifdef INTEL_INTRINSICS
 #include "intel/convert_bits_sse.h"
 #include "intel/convert_bits_avx2.h"
+#else
+#include "simde/convert_bits_sse.h"
+#include "simde/convert_bits_avx2.h"
 #endif
 #include "convert_helper.h"
 

@@ -40,8 +40,10 @@
 #include "../convert_planar.h"
 #include "../convert_bits.h"
 #include "convert_planar_avx2.h"
-#include "../filters/intel/resample_sse.h"
-#include "../filters/intel/planeswap_sse.h"
+//#include "../filters/intel/resample_sse.h"
+//#include "../filters/intel/planeswap_sse.h"
+#include "../filters/resample.h"
+#include "../filters/planeswap.h"
 #include "../filters/field.h"
 
 #ifdef AVS_WINDOWS
@@ -51,13 +53,20 @@
 #endif
 
 #include <avs/alignment.h>
-#include <tmmintrin.h>
-#include <emmintrin.h>
-#include <smmintrin.h>
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse4.1.h>
+#include <simde/x86/ssse3.h>
+#include <simde/x86/sse2.h>
 #include <algorithm>
 #include <string>
 
-
+#ifdef INTEL_INTRINSICS
+#define SSE41 __attribute__((__target__("sse4.1")))
+#define SSSE3 __attribute__((__target__("ssse3")))
+#else
+#define SSE41
+#define SSSE3
+#endif
 
 void convert_yuy2_to_y8_sse2(const BYTE *srcp, BYTE *dstp, size_t src_pitch, size_t dst_pitch, size_t width, size_t height)
 {
@@ -682,7 +691,7 @@ void convert_planarrgb_to_yuv_float_sse2(BYTE *(&dstp)[3], int(&dstPitch)[3], co
 
 template<int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void convert_planarrgb_to_yuv_uint16_sse41(BYTE *(&dstp)[3], int (&dstPitch)[3], const BYTE *(&srcp)[3], const int (&srcPitch)[3], int width, int height, const ConversionMatrix &m)
 {
@@ -819,7 +828,7 @@ void convert_planarrgb_to_yuv_uint16_sse2(BYTE *(&dstp)[3], int(&dstPitch)[3], c
       sum2 = _mm_add_ps(mul_b, offset_f);
       __m128 y = _mm_add_ps(sum1, sum2);
       __m128i yi = _mm_cvtps_epi32(y); // no extra rounding, cvtps rounds to nearest
-      yi = _MM_PACKUS_EPI32(yi, zero); // simulation
+      yi = _mm_packus_epi32(yi, zero); // simulation
       if constexpr (bits_per_pixel < 16) // albeit 10-14 bit have another function, make this general
         yi = _mm_min_epi16(yi, limit); // clamp 10,12,14 bit
       _mm_storel_epi64(reinterpret_cast<__m128i *>(dstp[0] + x), yi);
@@ -834,7 +843,7 @@ void convert_planarrgb_to_yuv_uint16_sse2(BYTE *(&dstp)[3], int(&dstPitch)[3], c
       sum2 = _mm_add_ps(mul_b, half_f);
       __m128 u = _mm_add_ps(sum1, sum2);
       __m128i ui = _mm_cvtps_epi32(u); // no extra rounding, cvtps rounds to nearest
-      ui = _MM_PACKUS_EPI32(ui, zero); // simulation
+      ui = _mm_packus_epi32(ui, zero); // simulation
       if constexpr (bits_per_pixel < 16) // albeit 10-14 bit have another function, make this general
         ui = _mm_min_epi16(ui, limit); // clamp 10,12,14 bit
       _mm_storel_epi64(reinterpret_cast<__m128i *>(dstp[1] + x), ui);
@@ -849,7 +858,7 @@ void convert_planarrgb_to_yuv_uint16_sse2(BYTE *(&dstp)[3], int(&dstPitch)[3], c
       sum2 = _mm_add_ps(mul_b, half_f);
       __m128 v = _mm_add_ps(sum1, sum2);
       __m128i vi = _mm_cvtps_epi32(v); // no extra rounding, cvtps rounds to nearest
-      vi = _MM_PACKUS_EPI32(vi, zero); // simulation
+      vi = _mm_packus_epi32(vi, zero); // simulation
       if constexpr (bits_per_pixel < 16) // albeit 10-14 bit have another function, make this general
         vi = _mm_min_epi16(vi, limit); // clamp 10,12,14 bit
       _mm_storel_epi64(reinterpret_cast<__m128i *>(dstp[2] + x), vi);
@@ -1066,7 +1075,7 @@ void convert_yuv_to_planarrgb_float_sse2(BYTE *(&dstp)[3], int(&dstPitch)[3], co
 
 template<int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void convert_yuv_to_planarrgb_uint16_sse41(BYTE *(&dstp)[3], int (&dstPitch)[3], const BYTE *(&srcp)[3], const int (&srcPitch)[3], int width, int height, const ConversionMatrix &m)
 {
@@ -1182,7 +1191,7 @@ void convert_yuv_to_planarrgb_uint16_sse2(BYTE *(&dstp)[3], int(&dstPitch)[3], c
       sum1 = _mm_add_ps(mul_y, mul_u);
       res = _mm_add_ps(sum1, mul_v);
       __m128i resi = _mm_cvtps_epi32(res); // no extra rounding, cvtps rounds to nearest
-      resi = _MM_PACKUS_EPI32(resi, zero); // simulation
+      resi = _mm_packus_epi32(resi, zero); // simulation
       if constexpr (bits_per_pixel < 16) // albeit 10-14 bit have another function, make this general
         resi = _mm_min_epi16(resi, limit); // clamp 10,12,14 bit
       _mm_storel_epi64(reinterpret_cast<__m128i *>(dstp[0] + x), resi);
@@ -1194,7 +1203,7 @@ void convert_yuv_to_planarrgb_uint16_sse2(BYTE *(&dstp)[3], int(&dstPitch)[3], c
       sum1 = _mm_add_ps(mul_y, mul_u);
       res = _mm_add_ps(sum1, mul_v);
       resi = _mm_cvtps_epi32(res); // no extra rounding, cvtps rounds to nearest
-      resi = _MM_PACKUS_EPI32(resi, zero); // simulation
+      resi = _mm_packus_epi32(resi, zero); // simulation
       if constexpr (bits_per_pixel < 16) // albeit 10-14 bit have another function, make this general
         resi = _mm_min_epi16(resi, limit); // clamp 10,12,14 bit
       _mm_storel_epi64(reinterpret_cast<__m128i *>(dstp[1] + x), resi);
@@ -1206,7 +1215,7 @@ void convert_yuv_to_planarrgb_uint16_sse2(BYTE *(&dstp)[3], int(&dstPitch)[3], c
       sum1 = _mm_add_ps(mul_y, mul_u);
       res = _mm_add_ps(sum1, mul_v);
       resi = _mm_cvtps_epi32(res); // no extra rounding, cvtps rounds to nearest
-      resi = _MM_PACKUS_EPI32(resi, zero); // simulation
+      resi = _mm_packus_epi32(resi, zero); // simulation
       if constexpr (bits_per_pixel < 16) // albeit 10-14 bit have another function, make this general
         resi = _mm_min_epi16(resi, limit); // clamp 10,12,14 bit
       _mm_storel_epi64(reinterpret_cast<__m128i *>(dstp[2] + x), resi);
@@ -1257,7 +1266,7 @@ static AVS_FORCEINLINE __m128i convert_yuv_to_rgb_sse2_core(const __m128i &px01,
 
 template<int rgb_pixel_step, bool hasAlpha>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void convert_yv24_to_rgb_ssse3(BYTE* dstp, const BYTE* srcY, const BYTE* srcU, const BYTE*srcV, const BYTE*srcA, size_t dst_pitch, size_t src_pitch_y, size_t src_pitch_uv, size_t src_pitch_a, size_t width, size_t height, const ConversionMatrix &matrix)
 {

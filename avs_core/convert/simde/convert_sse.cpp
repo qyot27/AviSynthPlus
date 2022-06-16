@@ -33,7 +33,8 @@
 // import and export plugins, or graphical user interfaces.
 
 #include "convert_sse.h"
-#include <emmintrin.h>
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
 
 template<int rgb_size>
 static AVS_FORCEINLINE __m128i convert_yuy2_to_rgb_sse2_core(const __m128i& src_luma_scaled, const __m128i& src_chroma, const __m128i &alpha,

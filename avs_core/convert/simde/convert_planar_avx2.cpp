@@ -36,17 +36,21 @@
 
 
 #include <avs/alignment.h>
-#ifdef AVS_WINDOWS
-    #include <intrin.h>
-#else
-    #include <x86intrin.h>
-#endif
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/avx2.h>
+#include <simde/x86/fma.h>
 
 #include "convert_planar_avx2.h"
 
+#ifdef INTEL_INTRINSICS
+#define AVX2 __attribute__((__target__("avx2")))
+#else
+#define AVX2
+#endif
+
 template<int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("avx2")))
+AVX2
 #endif
 void convert_planarrgb_to_yuv_uint16_avx2(BYTE* (&dstp)[3], int(&dstPitch)[3], const BYTE* (&srcp)[3], const int(&srcPitch)[3], int width, int height, const ConversionMatrix& m)
 {

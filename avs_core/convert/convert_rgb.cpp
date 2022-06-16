@@ -37,6 +37,9 @@
 #ifdef INTEL_INTRINSICS
 #include "intel/convert_rgb_sse.h"
 #include "intel/convert_rgb_avx2.h"
+#else
+#include "simde/convert_rgb_sse.h"
+#include "simde/convert_rgb_avx2.h"
 #endif
 #include <avs/alignment.h>
 

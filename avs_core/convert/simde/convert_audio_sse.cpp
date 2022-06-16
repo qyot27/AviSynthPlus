@@ -8,13 +8,16 @@
 
 #include <avs/types.h>
 #include <avs/config.h>
-#include <smmintrin.h> // SSE4.1 at most
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse4.1.h> // SSE4.1 at most
 
 #if defined(GCC) || defined(CLANG)
+#ifdef INTEL_INTRINSICS
   #define SSE2 __attribute__((__target__("sse2")))
   #define SSSE3 __attribute__((__target__("ssse3")))
   #define SSE41 __attribute__((__target__("sse4.1")))
 #else
+#endif // INTEL_INTRINSICS
   #define SSE2
   #define SSSE3
   #define SSE41

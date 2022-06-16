@@ -36,10 +36,14 @@
 #include <avs/alignment.h>
 #include <avs/minmax.h>
 
-#ifdef AVS_WINDOWS
-    #include <intrin.h>
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/avx2.h>
+#include <simde/x86/fma.h>
+
+#ifdef INTEL_INTRINSICS
+#define AVX2 __attribute__((__target__("avx2")))
 #else
-    #include <x86intrin.h>
+#define AVX2
 #endif
 
 #ifndef _mm256_set_m128i
@@ -60,8 +64,10 @@
 #endif
 
 template<typename pixel_t, bool chroma, bool fulls, bool fulld>
+#ifdef INTEL_INTRINSICS
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("avx2")))
+AVX2
+#endif
 #endif
 void convert_32_to_uintN_avx2(const BYTE *srcp, BYTE *dstp, int src_rowsize, int src_height, int src_pitch, int dst_pitch, int source_bitdepth, int target_bitdepth, int dither_target_bitdepth)
 {

@@ -49,15 +49,21 @@
 #include <avs/posix.h>
 #endif
 
-#include <emmintrin.h>
-#include <smmintrin.h> // SSE4.1
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h> // SSE4.1
+#ifdef INTEL_INTRINSICS
+#define SSE41 __attribute__((__target__("sse4.1")))
+#else
+#define SSE41
+#endif
 
 // float to 8 bit, float to 10/12/14/16 bit
 
 // sse4.1
 template<typename pixel_t, bool chroma, bool fulls, bool fulld>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void convert_32_to_uintN_sse41(const BYTE *srcp, BYTE *dstp, int src_rowsize, int src_height, int src_pitch, int dst_pitch, int source_bitdepth, int target_bitdepth, int dither_target_bitdepth)
 {
@@ -142,7 +148,7 @@ DEF_convert_32_to_uintN_functions(uint16_t)
 // shift right or left, depending on expandrange
 template<typename pixel_t_s, typename pixel_t_d>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static void convert_uint_limited_sse41(const BYTE* srcp, BYTE* dstp, int src_rowsize, int src_height, int src_pitch, int dst_pitch, int source_bitdepth, int target_bitdepth, int dither_target_bitdepth)
 {
@@ -224,7 +230,7 @@ static void convert_uint_limited_sse41(const BYTE* srcp, BYTE* dstp, int src_row
 
 template<typename pixel_t_s, typename pixel_t_d, bool chroma, bool fulls, bool fulld>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void convert_uint_sse41(const BYTE* srcp, BYTE* dstp, int src_rowsize, int src_height, int src_pitch, int dst_pitch, int source_bitdepth, int target_bitdepth, int dither_target_bitdepth)
 {
@@ -388,7 +394,7 @@ convert_uint_sse4_functions(uint16_t, uint16_t)
 // TEMPLATE_NEED_BACKSCALE to support dither_target_bits being lower than target bit depth
 template<typename pixel_t_s, typename pixel_t_d, bool chroma, bool fulls, bool fulld, bool TEMPLATE_NEED_BACKSCALE, bool TEMPLATE_LOW_DITHER_BITDEPTH>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static void do_convert_ordered_dither_uint_sse41(const BYTE* srcp8, BYTE* dstp8, int src_rowsize, int src_height, int src_pitch, int dst_pitch, int source_bitdepth, int target_bitdepth, int dither_target_bitdepth)
 {
@@ -673,7 +679,7 @@ static void do_convert_ordered_dither_uint_sse41(const BYTE* srcp8, BYTE* dstp8,
 
 template<typename pixel_t_s, typename pixel_t_d, bool chroma, bool fulls, bool fulld>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void convert_ordered_dither_uint_sse41(const BYTE* srcp8, BYTE* dstp8, int src_rowsize, int src_height, int src_pitch, int dst_pitch, int source_bitdepth, int target_bitdepth, int dither_target_bitdepth)
 {

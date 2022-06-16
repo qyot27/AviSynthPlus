@@ -42,6 +42,9 @@
 #ifdef INTEL_INTRINSICS
 #include "intel/convert_planar_sse.h"
 #include "intel/convert_planar_avx2.h"
+#else
+#include "simde/convert_planar_sse.h"
+#include "simde/convert_planar_avx2.h"
 #endif
 #include "convert_bits.h"
 #include "../filters/resample.h"

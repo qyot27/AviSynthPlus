@@ -35,6 +35,8 @@
 #include "convert_yuy2.h"
 #ifdef INTEL_INTRINSICS
 #include "intel/convert_yuy2_sse.h"
+#else
+#include "simde/convert_yuy2_sse.h"
 #endif
 #include "convert.h"
 #include "convert_matrix.h"
