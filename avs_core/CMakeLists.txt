@@ -42,6 +42,7 @@ foreach(FILE ${AvsCore_Sources})
   source_group("${GROUP}" FILES "${FILE}")
 endforeach()
 
+if (ENABLE_INTEL_SIMD)
 if (MSVC_IDE)
   IF(CLANG_IN_VS STREQUAL "1")
       # special SSSE3 option for source files with *_ssse3.cpp pattern
@@ -84,6 +85,7 @@ else()
   # special AVX2 option for source files with *_avx2.cpp pattern
   file(GLOB_RECURSE SRCS_AVX2 "*_avx2.cpp")
   set_source_files_properties(${SRCS_AVX2} PROPERTIES COMPILE_FLAGS "-mavx2 -mfma")
+endif()
 endif()
 
 # Specify include directories
