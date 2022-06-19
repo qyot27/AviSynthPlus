@@ -36,6 +36,8 @@
 #include "greyscale.h"
 #ifdef INTEL_INTRINSICS
 #include "intel/greyscale_sse.h"
+#else
+#include "simde/greyscale_sse.h"
 #endif
 #include "../core/internal.h"
 #include <avs/alignment.h>
@@ -179,7 +181,7 @@ PVideoFrame Greyscale::GetFrame(int n, IScriptEnvironment* env)
   }
 
   if (vi.IsYUY2()) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if ((env->GetCPUFlags() & CPUF_SSE2) && width > 4 && IsPtrAligned(srcp, 16)) {
       greyscale_yuy2_sse2(srcp, width, height, pitch);
     } else
@@ -200,7 +202,7 @@ PVideoFrame Greyscale::GetFrame(int n, IScriptEnvironment* env)
 
       return frame;
   }
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if(vi.IsRGB64()) {
     if ((env->GetCPUFlags() & CPUF_SSE4_1) && IsPtrAligned(srcp, 16)) {
       greyscale_rgb64_sse41(srcp, width, height, pitch, greyMatrix.y_b, greyMatrix.y_g, greyMatrix.y_r);

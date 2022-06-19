@@ -1,4 +1,4 @@
-﻿// Avisynth v2.5.  Copyright 2002 Ben Rudiak-Gould et al.
+// Avisynth v2.5.  Copyright 2002 Ben Rudiak-Gould et al.
 // http://www.avisynth.org
 
 // This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,14 @@
 
 #include "../turn.h"
 #include "turn_sse.h"
+#ifdef INTEL_INTRINSICS
 #include <tmmintrin.h>
+#define SSSE3 __attribute__((__target__("ssse3")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/ssse3.h>
+#define SSSE3
+#endif
 #include <cstdint>
 
 
@@ -361,7 +368,7 @@ template void turn_180_plane_sse2<uint64_t>(const BYTE* srcp, BYTE* dstp, int sr
 
 template <typename T>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void turn_180_plane_ssse3(const BYTE* srcp, BYTE* dstp, int src_rowsize, int src_height, int src_pitch, int dst_pitch)
 {

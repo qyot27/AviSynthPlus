@@ -37,10 +37,16 @@
 
 #include <avisynth.h>
 
+#ifdef INTEL_INTRINSICS
+#define SSE41 __attribute__((__target__("sse4.1")))
+#else
+#define SSE41
+#endif
+
 void greyscale_yuy2_sse2(BYTE *srcp, size_t /*width*/, size_t height, size_t pitch);
 void greyscale_rgb32_sse2(BYTE *srcp, size_t /*width*/, size_t height, size_t pitch, int cyb, int cyg, int cyr);
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void greyscale_rgb64_sse41(BYTE *srcp, size_t /*width*/, size_t height, size_t pitch, int cyb, int cyg, int cyr);
 #ifdef X86_32

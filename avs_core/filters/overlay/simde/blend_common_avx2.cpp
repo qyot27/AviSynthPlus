@@ -41,7 +41,12 @@
 #ifdef AVS_WINDOWS
 #include <intrin.h>
 #else
+#ifdef INTEL_INTRINSICS
 #include <x86intrin.h>
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/avx2.h>
+#endif // INTEL_INTRINSICS
 #endif
 
 template<typename pixel_t>

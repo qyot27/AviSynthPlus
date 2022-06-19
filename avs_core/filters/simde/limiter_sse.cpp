@@ -34,8 +34,16 @@
 
 
 #include "limiter_sse.h"
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
 #include <smmintrin.h> // for sse41
+#define SSE41 __attribute__((__target__("sse4.1")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h>
+#define SSE41
+#endif
 #include "../core/internal.h"
 
 //min and max values are 16-bit integers either max_plane|max_plane for planar or max_luma|max_chroma for yuy2
@@ -61,8 +69,8 @@ void limit_plane_uint16_sse2(BYTE *ptr, unsigned int min_value, unsigned int max
 
   while(ptr < end_point) {
     __m128i src = _mm_load_si128(reinterpret_cast<const __m128i*>(ptr));
-    src = _MM_MAX_EPU16(src, min_vector);
-    src = _MM_MIN_EPU16(src, max_vector);
+    src = _mm_max_epu16(src, min_vector);
+    src = _mm_min_epu16(src, max_vector);
     _mm_store_si128(reinterpret_cast<__m128i*>(ptr), src);
     ptr += 16;
   }
@@ -70,7 +78,7 @@ void limit_plane_uint16_sse2(BYTE *ptr, unsigned int min_value, unsigned int max
 
 //min and max values are 16-bit unsigned integers
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void limit_plane_uint16_sse4(BYTE *ptr, unsigned int min_value, unsigned int max_value, int pitch, int height)
 {

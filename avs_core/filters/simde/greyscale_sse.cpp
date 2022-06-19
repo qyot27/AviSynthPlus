@@ -35,8 +35,16 @@
 
 
 #include "greyscale_sse.h"
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
 #include <smmintrin.h>
+#define SSE41 __attribute__((__target__("sse4.1")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h>
+#define SSE41
+#endif // INTEL_INTRINSICS
 #include <avs/config.h>
 #include <avs/types.h>
 #include "avs/minmax.h"
@@ -99,7 +107,7 @@ void greyscale_rgb32_sse2(BYTE *srcp, size_t /*width*/, size_t height, size_t pi
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void greyscale_rgb64_sse41(BYTE *srcp, size_t /*width*/, size_t height, size_t pitch, int cyb, int cyg, int cyr)
 {

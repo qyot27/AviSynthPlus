@@ -43,6 +43,9 @@
 #ifdef INTEL_INTRINSICS
 #include "intel/merge_sse.h"
 #include "intel/merge_avx2.h"
+#else
+#include "simde/merge_sse.h"
+#include "simde/merge_avx2.h"
 #endif
 #include "../core/internal.h"
 #include "avs/alignment.h"
@@ -169,7 +172,7 @@ extern const AVSFunction Merge_filters[] = {
 };
 
 // also returns the proper integer weight/inverse weight for 8-16 bits
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
 MergeFuncPtr getMergeFunc(int bits_per_pixel, int cpuFlags, BYTE *srcp, const BYTE *otherp, float weight_f, int &weight_i, int &invweight_i)
 #else
 MergeFuncPtr getMergeFunc(int bits_per_pixel, BYTE *srcp, const BYTE *otherp, float weight_f, int &weight_i, int &invweight_i)
@@ -186,7 +189,7 @@ MergeFuncPtr getMergeFunc(int bits_per_pixel, BYTE *srcp, const BYTE *otherp, fl
   invweight_i = 32767 - weight_i;
 
   if (pixelsize == 1) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (cpuFlags & CPUF_AVX2)
       return &weighted_merge_planar_avx2;
     if (cpuFlags & CPUF_SSE2)
@@ -202,7 +205,7 @@ MergeFuncPtr getMergeFunc(int bits_per_pixel, BYTE *srcp, const BYTE *otherp, fl
     return &weighted_merge_planar_c<uint8_t>;
   }
   if (pixelsize == 2) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (cpuFlags & CPUF_AVX2)
     {
       if (bits_per_pixel == 16)
@@ -223,7 +226,7 @@ MergeFuncPtr getMergeFunc(int bits_per_pixel, BYTE *srcp, const BYTE *otherp, fl
   }
 
   // pixelsize == 4
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if (cpuFlags & CPUF_SSE2)
     return &weighted_merge_planar_sse2_float;
 #endif
@@ -236,7 +239,7 @@ static void merge_plane(BYTE* srcp, const BYTE* otherp, int src_pitch, int other
     //average of two planes
     if (pixelsize != 4) // 1 or 2
     {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_AVX2) {
         if (pixelsize == 1)
           average_plane_avx2<uint8_t>(srcp, otherp, src_pitch, other_pitch, src_rowsize, src_height);
@@ -268,7 +271,7 @@ static void merge_plane(BYTE* srcp, const BYTE* otherp, int src_pitch, int other
         }
     }
     else { // if (pixelsize == 4)
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
         average_plane_sse2_float(srcp, otherp, src_pitch, other_pitch, src_rowsize, src_height);
       else
@@ -280,7 +283,7 @@ static void merge_plane(BYTE* srcp, const BYTE* otherp, int src_pitch, int other
   {
     int weight_i;
     int invweight_i;
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     MergeFuncPtr weighted_merge_planar = getMergeFunc(bits_per_pixel, env->GetCPUFlags(), srcp, otherp, weight, /*out*/weight_i, /*out*/invweight_i);
 #else
     MergeFuncPtr weighted_merge_planar = getMergeFunc(bits_per_pixel, srcp, otherp, weight, /*out*/weight_i, /*out*/invweight_i);
@@ -334,7 +337,7 @@ PVideoFrame __stdcall MergeChroma::GetFrame(int n, IScriptEnvironment* env)
 
       int src_pitch = src->GetPitch();
       int chroma_pitch = chroma->GetPitch();
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
       {
         weighted_merge_chroma_yuy2_sse2(srcp, chromap, src_pitch, chroma_pitch, w, h, (int)(weight * 32768.0f), 32768 - (int)(weight * 32768.0f));
@@ -382,7 +385,7 @@ PVideoFrame __stdcall MergeChroma::GetFrame(int n, IScriptEnvironment* env)
 
       int src_pitch = src->GetPitch();
       int chroma_pitch = chroma->GetPitch();
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
       {
         replace_luma_yuy2_sse2(chromap, srcp, chroma_pitch, src_pitch, w, h);  // Just swap luma/chroma
@@ -487,7 +490,7 @@ PVideoFrame __stdcall MergeLuma::GetFrame(int n, IScriptEnvironment* env)
     int w = src->GetRowSize();
 
     if (weight < 0.9961f) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
       {
         weighted_merge_luma_yuy2_sse2(srcp, lumap, isrc_pitch, iluma_pitch, w, h, (int)(weight * 32768.0f), 32768 - (int)(weight * 32768.0f));
@@ -506,7 +509,7 @@ PVideoFrame __stdcall MergeLuma::GetFrame(int n, IScriptEnvironment* env)
         }
     }
     else {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
       {
         replace_luma_yuy2_sse2(srcp, lumap, isrc_pitch, iluma_pitch, w, h);

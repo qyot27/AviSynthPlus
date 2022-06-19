@@ -36,7 +36,12 @@
 #include <avs/minmax.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#endif
 
 void compare_sse2(uint32_t mask, int increment,
                          const BYTE * f1ptr, int pitch1,

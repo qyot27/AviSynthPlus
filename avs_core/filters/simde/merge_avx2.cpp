@@ -41,9 +41,15 @@
 
 // experimental simd includes for avx2 compiled files
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER)
+#ifdef INTEL_INTRINSICS
 #include <x86intrin.h>
 // x86intrin.h includes header files for whatever instruction
 // sets are specified on the compiler command line, such as: xopintrin.h, fma4intrin.h
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/avx2.h>
+#include <simde/x86/fma.h>
+#endif // INTEL_INTRINSICS
 #else
 #include <immintrin.h> // MS version of immintrin.h covers AVX, AVX2 and FMA3
 #endif // __GNUC__

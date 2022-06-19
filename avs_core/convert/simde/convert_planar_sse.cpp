@@ -40,10 +40,13 @@
 #include "../convert_planar.h"
 #include "../convert_bits.h"
 #include "convert_planar_avx2.h"
-//#include "../filters/intel/resample_sse.h"
-//#include "../filters/intel/planeswap_sse.h"
-#include "../filters/resample.h"
-#include "../filters/planeswap.h"
+#ifdef INTEL_INTRINSICS
+#include "../filters/intel/resample_sse.h"
+#include "../filters/intel/planeswap_sse.h"
+#else
+#include "../filters/simde/resample_sse.h"
+#include "../filters/simde/planeswap_sse.h"
+#endif
 #include "../filters/field.h"
 
 #ifdef AVS_WINDOWS
@@ -53,10 +56,6 @@
 #endif
 
 #include <avs/alignment.h>
-#define SIMDE_ENABLE_NATIVE_ALIASES
-#include <simde/x86/sse4.1.h>
-#include <simde/x86/ssse3.h>
-#include <simde/x86/sse2.h>
 #include <algorithm>
 #include <string>
 
@@ -64,6 +63,10 @@
 #define SSE41 __attribute__((__target__("sse4.1")))
 #define SSSE3 __attribute__((__target__("ssse3")))
 #else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse4.1.h>
+#include <simde/x86/ssse3.h>
+#include <simde/x86/sse2.h>
 #define SSE41
 #define SSSE3
 #endif

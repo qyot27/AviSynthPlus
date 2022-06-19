@@ -43,8 +43,14 @@
 #include "merge_sse.h"
 #include "merge_avx2.h"
 #include "../core/internal.h"
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
 #include <smmintrin.h>
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h>
+#endif
 #include "avs/alignment.h"
 #include <stdint.h>
 

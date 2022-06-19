@@ -34,8 +34,18 @@
 
 #include <avisynth.h>
 #include "../focus.h"
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
 #include <smmintrin.h>
+#define SSE41 __attribute__((__target__("sse4.1")))
+#define SSSE3 __attribute__((__target__("ssse3")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h>
+#define SSE41
+#define SSSE3
+#endif
 #include "../core/internal.h"
 #include <stdint.h>
 
@@ -145,8 +155,8 @@ static AVS_FORCEINLINE __m128i af_blend_sse2(__m128i &upper, __m128i &center, __
 
 static AVS_FORCEINLINE __m128i af_blend_uint16_t_sse2(__m128i &upper, __m128i &center, __m128i &lower, __m128i &center_weight, __m128i &outer_weight, __m128i &round_mask) {
   __m128i outer_tmp = _mm_add_epi32(upper, lower);
-  __m128i center_tmp = _MM_MULLO_EPI32(center, center_weight); // sse2: mullo simulation
-  outer_tmp = _MM_MULLO_EPI32(outer_tmp, outer_weight);
+  __m128i center_tmp = _mm_mullo_epi32(center, center_weight); // sse2: mullo simulation
+  outer_tmp = _mm_mullo_epi32(outer_tmp, outer_weight);
 
   __m128i result = _mm_add_epi32(center_tmp, outer_tmp);
   result = _mm_add_epi32(result, center_tmp);
@@ -155,7 +165,7 @@ static AVS_FORCEINLINE __m128i af_blend_uint16_t_sse2(__m128i &upper, __m128i &c
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static AVS_FORCEINLINE __m128i af_blend_uint16_t_sse41(__m128i &upper, __m128i &center, __m128i &lower, __m128i &center_weight, __m128i &outer_weight, __m128i &round_mask)
 {
@@ -200,11 +210,11 @@ static AVS_FORCEINLINE __m128i af_unpack_blend_uint16_t_sse2(__m128i &left, __m1
 
   __m128i result_lo = af_blend_uint16_t_sse2(left_lo, center_lo, right_lo, center_weight, outer_weight, round_mask);
   __m128i result_hi = af_blend_uint16_t_sse2(left_hi, center_hi, right_hi, center_weight, outer_weight, round_mask);
-  return _MM_PACKUS_EPI32(result_lo, result_hi); // sse4.1 simul
+  return _mm_packus_epi32(result_lo, result_hi); // sse4.1 simul
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static AVS_FORCEINLINE __m128i af_unpack_blend_uint16_t_sse41(__m128i &left, __m128i &center, __m128i &right, __m128i &center_weight, __m128i &outer_weight, __m128i &round_mask, __m128i &zero)
 {
@@ -247,7 +257,7 @@ void af_vertical_uint16_t_sse2(BYTE* line_buf, BYTE* dstp, int height, int pitch
       __m128i result_lo = af_blend_uint16_t_sse2(upper_lo, center_lo, lower_lo, center_weight, outer_weight, round_mask);
       __m128i result_hi = af_blend_uint16_t_sse2(upper_hi, center_hi, lower_hi, center_weight, outer_weight, round_mask);
 
-      __m128i result = _MM_PACKUS_EPI32(result_lo, result_hi); // sse4.1 simul
+      __m128i result = _mm_packus_epi32(result_lo, result_hi); // sse4.1 simul
 
       _mm_store_si128(reinterpret_cast<__m128i*>(dstp + x), result);
     }
@@ -267,14 +277,14 @@ void af_vertical_uint16_t_sse2(BYTE* line_buf, BYTE* dstp, int height, int pitch
     __m128i result_lo = af_blend_uint16_t_sse2(upper_lo, center_lo, center_lo, center_weight, outer_weight, round_mask);
     __m128i result_hi = af_blend_uint16_t_sse2(upper_hi, center_hi, center_hi, center_weight, outer_weight, round_mask);
 
-    __m128i result = _MM_PACKUS_EPI32(result_lo, result_hi); // sse4.1 simul
+    __m128i result = _mm_packus_epi32(result_lo, result_hi); // sse4.1 simul
 
     _mm_store_si128(reinterpret_cast<__m128i*>(dstp + x), result);
   }
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void af_vertical_uint16_t_sse41(BYTE* line_buf, BYTE* dstp, int height, int pitch, int row_size, int amount)
 {
@@ -557,7 +567,7 @@ void af_horizontal_rgb64_sse2(BYTE* dstp, const BYTE* srcp, size_t dst_pitch, si
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void af_horizontal_rgb64_sse41(BYTE* dstp, const BYTE* srcp, size_t dst_pitch, size_t src_pitch, size_t height, size_t width, size_t amount)
 {
@@ -1013,7 +1023,7 @@ void af_horizontal_planar_uint16_t_sse2(BYTE* dstp, size_t height, size_t pitch,
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void af_horizontal_planar_uint16_t_sse41(BYTE* dstp, size_t height, size_t pitch, size_t row_size, size_t amount, int bits_per_pixel)
 {
@@ -1234,7 +1244,7 @@ static inline __m128i _mm_cmple_epu8(__m128i x, __m128i y)
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static inline __m128i _mm_cmple_epu16_sse41(__m128i x, __m128i y)
 {
@@ -1310,7 +1320,7 @@ template void accumulate_line_sse2<true>(BYTE* c_plane, const BYTE** planeP, int
 
 template<bool maxThreshold>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void accumulate_line_ssse3(BYTE* c_plane, const BYTE** planeP, int planes, size_t width, int threshold, int div)
 {
@@ -1420,9 +1430,9 @@ void accumulate_line_16_sse2(BYTE* c_plane, const BYTE** planeP, int planes, siz
     //__m128 half = _mm_set1_ps(0.5f); // no need rounder, _mm_cvtps_epi32 default is round-to-nearest, unless we use _mm_cvttps_epi32 which truncates
     low = _mm_cvtps_epi32(_mm_mul_ps(_mm_cvtepi32_ps(low), div_vector));
     high = _mm_cvtps_epi32(_mm_mul_ps(_mm_cvtepi32_ps(high), div_vector));
-    acc = _MM_PACKUS_EPI32(low, high); // sse4.1 simul
+    acc = _mm_packus_epi32(low, high); // sse4.1 simul
     if (lessThan16bit)
-      acc = _MM_MIN_EPU16(acc, limit); // sse4.1 simul
+      acc = _mm_min_epu16(acc, limit); // sse4.1 simul
 
     _mm_store_si128(reinterpret_cast<__m128i*>(c_plane+x), acc);
   }
@@ -1439,7 +1449,7 @@ template void accumulate_line_16_sse2<true, true>(BYTE* c_plane, const BYTE** pl
 // fast: maxThreshold (255) simple accumulate for average
 template<bool maxThreshold, bool lessThan16bit>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void accumulate_line_16_sse41(BYTE* c_plane, const BYTE** planeP, int planes, size_t rowsize, int threshold, int div, int bits_per_pixel)
 {

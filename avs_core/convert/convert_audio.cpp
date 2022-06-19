@@ -95,7 +95,7 @@ ConvertAudio::ConvertAudio(PClip _clip, int _sample_type)
     case PAIR(SAMPLE_INT32, SAMPLE_FLOAT): convert_c = convert32ToFLT; break;
     case PAIR(SAMPLE_FLOAT, SAMPLE_INT32): convert_c = convertFLTTo32; break;
   }
-  #ifdef INTEL_INTRINSICS
+  #if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     switch(PAIR(src_format, dst_format)) {
       case PAIR(SAMPLE_INT32, SAMPLE_INT16): convert_sse2  = convert32To16_SSE2;  convert_avx2 = convert32To16_AVX2;  break;
       case PAIR(SAMPLE_INT16, SAMPLE_INT32): convert_sse2  = convert16To32_SSE2;  convert_avx2 = convert16To32_AVX2;  break;
@@ -150,7 +150,7 @@ void __stdcall ConvertAudio::GetAudio(void *buf, int64_t start, int64_t count, I
   if (convert == nullptr) {
     convert = convert_c;
     convert_float = src_format == SAMPLE_FLOAT ? convertFLTTo32 : convert32ToFLT; // for two-stage
-    #ifdef INTEL_INTRINSICS
+    #if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       int cpu_flags = env->GetCPUFlags();
       if ((cpu_flags & CPUF_SSE2)) {
         if (convert_sse2)

@@ -35,15 +35,29 @@
 
 #include <avisynth.h>
 #include "internal.h"
-#ifdef INTEL_INTRINSICS
 #ifdef AVS_WINDOWS
 #include <intrin.h>
 #else
+#ifdef INTEL_INTRINSICS
 #include <x86intrin.h>
+#else
+#include <simde/x86/avx2.h>
 #endif
+#endif
+
+#ifdef INTEL_INTRINSICS
 #include <smmintrin.h> // SSE4.1
 #include <emmintrin.h>
 #include <tmmintrin.h>
+#define SSSE3 __attribute__((__target__("ssse3")))
+#define SSE41 __attribute__((__target__("sse4.1")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse4.1.h>
+#include <simde/x86/sse2.h>
+#include <simde/x86/ssse3.h>
+#define SSSE3
+#define SSE41
 #endif
 
 int AviHelper_ImageSize(const VideoInfo *vi, bool AVIPadScanlines, bool v210, bool v410, bool r210, bool R10k, bool v308, bool v408, bool Y410) {
@@ -323,7 +337,7 @@ static AVS_FORCEINLINE uint64_t avs_swap64(uint64_t x) {
 
 #ifdef INTEL_INTRINSICS
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 static AVS_FORCEINLINE __m128i _mm_bswap_epi64_ssse3(__m128i x)
 {
@@ -376,7 +390,7 @@ void bgr_to_rgbBE_c(uint8_t* pdst, int dstpitch, const uint8_t *src, int srcpitc
 #ifdef INTEL_INTRINSICS
 // 4x16: two-way symmetric
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void bgra_to_argbBE_ssse3(uint8_t* pdst, int dstpitch, const uint8_t *src, int srcpitch, int width, int height)
 {
@@ -604,7 +618,7 @@ static void prepare_from_interleaved_uv_sse2(uint8_t* pdstu, uint8_t* pdstv, int
 
 template<bool shift6>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static void prepare_from_interleaved_uv_sse41(uint8_t* pdstu, uint8_t* pdstv, int pitchUV, const uint8_t *src, int srcpitch, int width, int height)
 {

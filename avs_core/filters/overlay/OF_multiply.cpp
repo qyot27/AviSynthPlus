@@ -41,6 +41,9 @@
 #ifdef INTEL_INTRINSICS
 #include "intel/OF_multiply_sse.h"
 #include "intel/OF_multiply_avx2.h"
+#else
+#include "simde/OF_multiply_sse.h"
+#include "simde/OF_multiply_avx2.h"
 #endif
 void OL_MultiplyImage::DoBlendImageMask(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask) {
   if (bits_per_pixel == 8)

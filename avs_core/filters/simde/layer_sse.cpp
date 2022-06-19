@@ -49,7 +49,12 @@
 #include <avs/minmax.h>
 #include <avs/alignment.h>
 #include "../core/internal.h"
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#endif
 #include "../convert/convert_planar.h"
 #include <algorithm>
 

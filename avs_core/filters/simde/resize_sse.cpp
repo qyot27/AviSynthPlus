@@ -33,7 +33,12 @@
 // import and export plugins, or graphical user interfaces.
 
 #include <avisynth.h>
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#endif
 
 
 //todo: think of a way to do this with pavgb

@@ -36,6 +36,8 @@
 #include "resize.h"
 #ifdef INTEL_INTRINSICS
 #include "intel/resize_sse.h"
+#else
+#include "simde/resize_sse.h"
 #endif
 #include "../core/internal.h"
 #include <avs/alignment.h>
@@ -89,7 +91,7 @@ void vertical_reduce_core(BYTE* dstp, const BYTE* srcp, int dst_pitch, int src_p
   if (!srcp) {
     return;
   }
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if (pixelsize == 1 && (env->GetCPUFlags() & CPUF_SSE2) && IsPtrAligned(srcp, 16) && row_size >= 16) {
     vertical_reduce_sse2(dstp, srcp, dst_pitch, src_pitch, row_size, height);
   }

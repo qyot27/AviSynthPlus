@@ -45,8 +45,16 @@
 #include <avs/posix.h>
 #endif
 #include "planeswap_sse.h"
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
 #include <tmmintrin.h>
+#define SSSE3 __attribute__((__target__("ssse3")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/ssse3.h>
+#define SSSE3
+#endif
 #include "stdint.h"
 
 
@@ -74,7 +82,7 @@ void yuy2_swap_sse2(const BYTE* srcp, BYTE* dstp, int src_pitch, int dst_pitch, 
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void yuy2_swap_ssse3(const BYTE* srcp, BYTE* dstp, int src_pitch, int dst_pitch, int width, int height)
 {

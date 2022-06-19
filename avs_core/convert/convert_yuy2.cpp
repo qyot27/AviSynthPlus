@@ -400,7 +400,7 @@ PVideoFrame __stdcall ConvertToYUY2::GetFrame(int n, IScriptEnvironment* env)
     int src_heigh = dst->GetHeight();
 
     if (interlaced) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
       {
         convert_yv12_to_yuy2_interlaced_sse2(srcp_y, srcp_u, srcp_v, src->GetRowSize(PLANAR_Y), src_pitch_y, src_pitch_uv, dstp, dst_pitch ,src_heigh);
@@ -418,7 +418,7 @@ PVideoFrame __stdcall ConvertToYUY2::GetFrame(int n, IScriptEnvironment* env)
         convert_yv12_to_yuy2_interlaced_c(srcp_y, srcp_u, srcp_v, src->GetRowSize(PLANAR_Y), src_pitch_y, src_pitch_uv, dstp, dst_pitch ,src_heigh);
       }
     } else {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
       {
         convert_yv12_to_yuy2_progressive_sse2(srcp_y, srcp_u, srcp_v, src->GetRowSize(PLANAR_Y), src_pitch_y, src_pitch_uv, dstp, dst_pitch ,src_heigh);
@@ -447,7 +447,7 @@ PVideoFrame __stdcall ConvertToYUY2::GetFrame(int n, IScriptEnvironment* env)
   auto props = env->getFramePropsRW(dst);
   update_Matrix_and_ColorRange(props, theMatrix, theColorRange, env);
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if (env->GetCPUFlags() & CPUF_SSE2)
   {
     if ((src_cs & VideoInfo::CS_BGR32) == VideoInfo::CS_BGR32) {
@@ -608,7 +608,7 @@ PVideoFrame __stdcall ConvertBackToYUY2::GetFrame(int n, IScriptEnvironment* env
     const int pitchY  = src->GetPitch(PLANAR_Y);
     const int pitchUV = src->GetPitch(PLANAR_U);
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (env->GetCPUFlags() & CPUF_SSE2)
     { 
       convert_yv24_back_to_yuy2_sse2(srcY, srcU, srcV, dstp, pitchY, pitchUV, dpitch, vi.height, vi.width);
@@ -631,7 +631,7 @@ PVideoFrame __stdcall ConvertBackToYUY2::GetFrame(int n, IScriptEnvironment* env
   PVideoFrame dst = env->NewVideoFrameP(vi, &src);
   BYTE* yuv = dst->GetWritePtr();
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if (env->GetCPUFlags() & CPUF_SSE2)
   {
     if ((src_cs & VideoInfo::CS_BGR32) == VideoInfo::CS_BGR32) {

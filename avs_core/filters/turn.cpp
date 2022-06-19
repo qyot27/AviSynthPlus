@@ -41,6 +41,8 @@
 #include "turn.h"
 #ifdef INTEL_INTRINSICS
 #include "intel/turn_sse.h"
+#else
+#include "simde/turn_sse.h"
 #endif
 #include "resample.h"
 #include "planeswap.h"
@@ -329,7 +331,7 @@ void Turn::SetUVSource(int mod_h, int mod_v, IScriptEnvironment* env)
 
 void Turn::SetTurnFunction(int direction, IScriptEnvironment* env)
 {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   const int cpu = env->GetCPUFlags();
   const bool sse2 = cpu & CPUF_SSE2;
   const bool ssse3 = cpu & CPUF_SSSE3;
@@ -344,7 +346,7 @@ void Turn::SetTurnFunction(int direction, IScriptEnvironment* env)
 
   if (vi.IsRGB64())
   {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (sse2)
       set_funcs(turn_left_rgb64_sse2, turn_right_rgb64_sse2, turn_180_plane_sse2<uint64_t>);
     else
@@ -360,7 +362,7 @@ void Turn::SetTurnFunction(int direction, IScriptEnvironment* env)
   }
   else if (vi.IsRGB32())
   {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (sse2)
       set_funcs(turn_left_rgb32_sse2, turn_right_rgb32_sse2, turn_180_plane_sse2<uint32_t>);
     else
@@ -379,7 +381,7 @@ void Turn::SetTurnFunction(int direction, IScriptEnvironment* env)
   }
   else if (vi.ComponentSize() == 1) // 8 bit
   {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (sse2)
     {
       set_funcs(turn_left_plane_8_sse2, turn_right_plane_8_sse2,
@@ -393,7 +395,7 @@ void Turn::SetTurnFunction(int direction, IScriptEnvironment* env)
   }
   else if (vi.ComponentSize() == 2) // 16 bit
   {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (sse2)
     {
       set_funcs(turn_left_plane_16_sse2, turn_right_plane_16_sse2,
@@ -408,7 +410,7 @@ void Turn::SetTurnFunction(int direction, IScriptEnvironment* env)
   }
   else if (vi.ComponentSize() == 4) // 32 bit
   {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (sse2) {
       set_funcs(turn_left_plane_32_sse2, turn_right_plane_32_sse2, turn_180_plane_sse2<uint32_t>);
     }

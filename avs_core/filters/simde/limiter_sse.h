@@ -37,10 +37,16 @@
 
 #include <avisynth.h>
 
+#ifdef INTEL_INTRINSICS
+#define SSE41 __attribute__((__target__("sse4.1")))
+#else
+#define SSE41
+#endif
+
 void limit_plane_sse2(BYTE *ptr, int min_value, int max_value, int pitch, int width, int height);
 void limit_plane_uint16_sse2(BYTE *ptr, unsigned int min_value, unsigned int max_value, int pitch, int height);
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void limit_plane_uint16_sse4(BYTE *ptr, unsigned int min_value, unsigned int max_value, int pitch, int height);
 #ifdef X86_32

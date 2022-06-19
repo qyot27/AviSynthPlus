@@ -36,6 +36,9 @@
 #ifdef INTEL_INTRINSICS
 #include "intel/focus_sse.h"
 #include "intel/focus_avx2.h"
+#else
+#include "simde/focus_sse.h"
+#include "simde/focus_avx2.h"
 #endif
 #include <cmath>
 #include <vector>
@@ -135,7 +138,7 @@ template<typename pixel_t>
 static void af_vertical_process(BYTE* line_buf, BYTE* dstp, size_t height, size_t pitch, size_t row_size, int half_amount, int bits_per_pixel, IScriptEnvironment* env) {
   size_t width = row_size / sizeof(pixel_t);
   // only for 8/16 bit, float separated
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if (sizeof(pixel_t) == 1 && (env->GetCPUFlags() & CPUF_AVX2) && width >= 32) {
     //pitch of aligned frames is always >= 32 so we'll just process some garbage if width is not mod32
     af_vertical_avx2(line_buf, dstp, (int)height, (int)pitch, (int)width, half_amount);
@@ -174,7 +177,7 @@ static void af_vertical_process(BYTE* line_buf, BYTE* dstp, size_t height, size_
 
 static void af_vertical_process_float(BYTE* line_buf, BYTE* dstp, size_t height, size_t pitch, size_t row_size, double amountd, IScriptEnvironment* env) {
     size_t width = row_size / sizeof(float);
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if ((env->GetCPUFlags() & CPUF_SSE2) && width >= 16) {
         //pitch of aligned frames is always >= 16 so we'll just process some garbage if width is not mod16
         af_vertical_sse2_float(line_buf, dstp, (int)height, (int)pitch, (int)row_size, (float)amountd);
@@ -481,7 +484,7 @@ PVideoFrame __stdcall AdjustFocusH::GetFrame(int n, IScriptEnvironment* env)
       BYTE* q = dst->GetWritePtr(plane);
       int pitch = dst->GetPitch(plane);
       int height = dst->GetHeight(plane);
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (pixelsize == 1 && (env->GetCPUFlags() & CPUF_AVX2) && row_size > 32) {
         af_horizontal_planar_avx2(q, height, pitch, row_size, half_amount);
       }
@@ -521,7 +524,7 @@ PVideoFrame __stdcall AdjustFocusH::GetFrame(int n, IScriptEnvironment* env)
     if (vi.IsYUY2()) {
       BYTE* q = dst->GetWritePtr();
       const int pitch = dst->GetPitch();
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if ((env->GetCPUFlags() & CPUF_SSE2) && vi.width>8) {
         af_horizontal_yuy2_sse2(dst->GetWritePtr(), src->GetReadPtr(), dst->GetPitch(), src->GetPitch(), vi.height, vi.width, half_amount);
       } else
@@ -537,7 +540,7 @@ PVideoFrame __stdcall AdjustFocusH::GetFrame(int n, IScriptEnvironment* env)
       }
     }
     else if (vi.IsRGB32() || vi.IsRGB64()) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if ((pixelsize==1) && (env->GetCPUFlags() & CPUF_SSE2) && vi.width>4) {
         //this one is NOT in-place
         af_horizontal_rgb32_sse2(dst->GetWritePtr(), src->GetReadPtr(), dst->GetPitch(), src->GetPitch(), vi.height, vi.width, half_amount);
@@ -792,7 +795,7 @@ static void accumulate_line_yuy2_c(BYTE* c_plane, const BYTE** planeP, int plane
 
 static void accumulate_line_yuy2(BYTE* c_plane, const BYTE** planeP, int planes, size_t width, BYTE threshold_luma, BYTE threshold_chroma, int div, IScriptEnvironment* env)
 {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if ((env->GetCPUFlags() & CPUF_SSE2) && width >= 16) {
     accumulate_line_sse2<false>(c_plane, planeP, planes, width, threshold_luma | (threshold_chroma << 8), div);
   } else
@@ -808,7 +811,7 @@ static void accumulate_line_yuy2(BYTE* c_plane, const BYTE** planeP, int planes,
 static void accumulate_line(BYTE* c_plane, const BYTE** planeP, int planes, size_t rowsize, BYTE threshold, int div, int pixelsize, int bits_per_pixel, IScriptEnvironment* env) {
   // threshold == 255: simple average
   bool maxThreshold = (threshold == 255);
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if ((pixelsize == 2) && (env->GetCPUFlags() & CPUF_SSE4) && rowsize >= 16) {
     // <maxThreshold, lessThan16bit>
     if(maxThreshold) {
@@ -918,7 +921,7 @@ static int64_t calculate_sad_c(const BYTE* cur_ptr, const BYTE* other_ptr, int c
 
 // sum of byte-diffs.
 static int64_t calculate_sad(const BYTE* cur_ptr, const BYTE* other_ptr, int cur_pitch, int other_pitch, size_t rowsize, size_t height, int pixelsize, int bits_per_pixel, IScriptEnvironment* env) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   // todo: sse for float
   if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2) && rowsize >= 16) {
     return (int64_t)calculate_sad_sse2<false>(cur_ptr, other_ptr, cur_pitch, other_pitch, rowsize, height);

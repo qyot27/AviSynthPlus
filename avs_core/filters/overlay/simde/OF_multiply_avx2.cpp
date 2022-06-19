@@ -40,7 +40,14 @@
 #ifdef AVS_WINDOWS
 #include <intrin.h>
 #else
+#ifdef INTEL_INTRINSICS
 #include <x86intrin.h>
+#define AVX2 __attribute__((__target__("avx2")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/avx2.h>
+#define AVX2
+#endif // INTEL_INTRINSICS
 #endif
 
 template<typename pixel_t>
@@ -102,7 +109,7 @@ static AVS_FORCEINLINE void Store_EightChromapixels(pixel_t* dst, __m256 what, c
 
 template<typename pixel_t, bool opacity_is_full, bool has_mask>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("avx2")))
+AVX2
 #endif
 void of_multiply_avx2(
   int bits_per_pixel,

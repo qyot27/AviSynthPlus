@@ -37,13 +37,21 @@
 
 #include <avisynth.h>
 
+#ifdef INTEL_INTRINSICS
+#define SSE41 __attribute__((__target__("sse4.1")))
+#define SSSE3 __attribute__((__target__("ssse3")))
+#else
+#define SSE41
+#define SSSE3
+#endif
+
 #ifdef X86_32
 void af_vertical_mmx(BYTE* line_buf, BYTE* dstp, int height, int pitch, int width, int amount);
 #endif
 void af_vertical_sse2(BYTE* line_buf, BYTE* dstp, int height, int pitch, int width, int amount);
 void af_vertical_uint16_t_sse2(BYTE* line_buf, BYTE* dstp, int height, int pitch, int row_size, int amount);
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void af_vertical_uint16_t_sse41(BYTE* line_buf, BYTE* dstp, int height, int pitch, int row_size, int amount);
 void af_vertical_sse2_float(BYTE * line_buf, BYTE * dstp, const int height, const int pitch, const int row_size, const float amount);
@@ -55,7 +63,7 @@ void af_horizontal_planar_mmx(BYTE* dstp, size_t height, size_t pitch, size_t wi
 void af_horizontal_planar_sse2(BYTE* dstp, size_t height, size_t pitch, size_t width, size_t amount);
 void af_horizontal_planar_uint16_t_sse2(BYTE* dstp, size_t height, size_t pitch, size_t row_size, size_t amount, int bits_per_pixel);
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void af_horizontal_planar_uint16_t_sse41(BYTE* dstp, size_t height, size_t pitch, size_t row_size, size_t amount, int bits_per_pixel);
 void af_horizontal_planar_float_sse2(BYTE* dstp, size_t height, size_t pitch, size_t row_size, float amount);
@@ -73,7 +81,7 @@ void af_horizontal_rgb32_sse2(BYTE* dstp, const BYTE* srcp, size_t dst_pitch, si
 
 void af_horizontal_rgb64_sse2(BYTE* dstp, const BYTE* srcp, size_t dst_pitch, size_t src_pitch, size_t height, size_t width, size_t amount);
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void af_horizontal_rgb64_sse41(BYTE* dstp, const BYTE* srcp, size_t dst_pitch, size_t src_pitch, size_t height, size_t width, size_t amount);
 
@@ -86,14 +94,14 @@ template<bool maxThreshold>
 void accumulate_line_sse2(BYTE* c_plane, const BYTE** planeP, int planes, size_t width, int threshold, int div);
 template<bool maxThreshold>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void accumulate_line_ssse3(BYTE* c_plane, const BYTE** planeP, int planes, size_t width, int threshold, int div);
 template<bool maxThreshold, bool lessThan16bit>
 void accumulate_line_16_sse2(BYTE* c_plane, const BYTE** planeP, int planes, size_t rowsize, int threshold, int div, int bits_per_pixel);
 template<bool maxThreshold, bool lessThan16bit>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void accumulate_line_16_sse41(BYTE* c_plane, const BYTE** planeP, int planes, size_t rowsize, int threshold, int div, int bits_per_pixel);
 

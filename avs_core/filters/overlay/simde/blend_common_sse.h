@@ -39,6 +39,14 @@
 
 #include <avs/types.h>
 
+#ifdef INTEL_INTRINSICS
+#define SSE41 __attribute__((__target__("sse4.1")))
+#define SSE2 __attribute__((__target__("sse2")))
+#else
+#define SSE41
+#define SSE2
+#endif
+
 // Mode: Overlay
 #ifdef X86_32
 void overlay_blend_mmx_plane_masked(BYTE* p1, const BYTE* p2, const BYTE* mask,
@@ -51,7 +59,7 @@ void overlay_blend_sse2_plane_masked(BYTE* p1, const BYTE* p2, const BYTE* mask,
 
 template<typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_blend_sse41_plane_masked(BYTE* p1, const BYTE* p2, const BYTE* mask,
   const int p1_pitch, const int p2_pitch, const int mask_pitch,
@@ -59,7 +67,7 @@ void overlay_blend_sse41_plane_masked(BYTE* p1, const BYTE* p2, const BYTE* mask
 
 template<bool has_mask, typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_blend_sse41_uint(BYTE* p1, const BYTE* p2, const BYTE* mask,
   const int p1_pitch, const int p2_pitch, const int mask_pitch,
@@ -67,7 +75,7 @@ void overlay_blend_sse41_uint(BYTE* p1, const BYTE* p2, const BYTE* mask,
 
 template<bool has_mask, typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse2")))
+SSE2
 #endif
 void overlay_blend_sse2_uint(BYTE* p1, const BYTE* p2, const BYTE* mask,
   const int p1_pitch, const int p2_pitch, const int mask_pitch,
@@ -91,7 +99,7 @@ void overlay_blend_sse2_plane_opacity(BYTE* p1, const BYTE* p2, const BYTE* mask
 
 template<int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_blend_sse41_plane_opacity_uint16(BYTE* p1, const BYTE* p2, const BYTE* mask,
   const int p1_pitch, const int p2_pitch, const int mask_pitch,
@@ -110,7 +118,7 @@ void overlay_blend_sse2_plane_masked_opacity(BYTE* p1, const BYTE* p2, const BYT
 
 template<typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_blend_sse41_plane_masked_opacity(BYTE* p1, const BYTE* p2, const BYTE* mask,
   const int p1_pitch, const int p2_pitch, const int mask_pitch,
@@ -125,11 +133,11 @@ void overlay_darken_sse2(BYTE* p1Y, BYTE* p1U, BYTE* p1V, const BYTE* p2Y, const
 void overlay_lighten_sse2(BYTE* p1Y, BYTE* p1U, BYTE* p1V, const BYTE* p2Y, const BYTE* p2U, const BYTE* p2V, int p1_pitch, int p2_pitch, int width, int height);
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_darken_sse41(BYTE* p1Y, BYTE* p1U, BYTE* p1V, const BYTE* p2Y, const BYTE* p2U, const BYTE* p2V, int p1_pitch, int p2_pitch, int width, int height);
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_lighten_sse41(BYTE* p1Y, BYTE* p1U, BYTE* p1V, const BYTE* p2Y, const BYTE* p2U, const BYTE* p2V, int p1_pitch, int p2_pitch, int width, int height);
 

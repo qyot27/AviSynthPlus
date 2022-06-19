@@ -42,6 +42,8 @@
 #include "text-overlay.h"
 #ifdef INTEL_INTRINSICS
 #include "intel/text-overlay_sse.h"
+#else
+#include "simde/text-overlay_sse.h"
 #endif
 #include "../convert/convert_matrix.h"  // for RGB2YUV_Rec601
 
@@ -2141,7 +2143,7 @@ const char* const t_ABFF="Assumed Bottom Field First ";
 const char* const t_STFF="Top Field (Separated)      ";
 const char* const t_SBFF="Bottom Field (Separated)   ";
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
 std::string GetCpuMsg(IScriptEnvironment * env, bool avx512)
 {
   int flags = env->GetCPUFlags();
@@ -2332,13 +2334,13 @@ PVideoFrame FilterInfo::GetFrame(int n, IScriptEnvironment* env)
     // CPU capabilities
     tlen += snprintf(text + tlen, sizeof(text) - tlen,
       "CPU: %s\n"
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       , GetCpuMsg(env, false).c_str()
 #else
       , GetCpuMsg(env).c_str()
 #endif
     );
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     // AVX512 flags in new line (too long)
     std::string avx512 = GetCpuMsg(env, true);
     if (avx512.length() > 0) {
@@ -2771,7 +2773,7 @@ PVideoFrame __stdcall Compare::GetFrame(int n, IScriptEnvironment* env)
     const int height = f1->GetHeight();
 
     bytecount = (rowsize / pixelsize) * height * masked_bytes / 4;
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
 
     if (((vi.IsRGB32() && (rowsize % 16 == 0)) || (vi.IsRGB24() && (rowsize % 12 == 0)) || (vi.IsYUY2() && (rowsize % 16 == 0))) &&
       (pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2)) // only for uint8_t (pixelsize==1), todo
@@ -2815,7 +2817,7 @@ PVideoFrame __stdcall Compare::GetFrame(int n, IScriptEnvironment* env)
         const int height = f1->GetHeight(plane);
 
         bytecount += (rowsize / pixelsize) * height;
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
 
         if ((pixelsize == 1) && (rowsize % 16 == 0) && (env->GetCPUFlags() & CPUF_SSE2))
         {

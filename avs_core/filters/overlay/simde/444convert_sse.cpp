@@ -36,8 +36,16 @@
 
 #include "444convert_sse.h"
 #include "../core/internal.h"
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
 #include <smmintrin.h>
+#define SSE41 __attribute__((__target__("sse4.1")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h>
+#define SSE41
+#endif
 #include <avs/alignment.h>
 
 // fast in-place conversions from and to 4:4:4
@@ -410,14 +418,14 @@ static AVS_FORCEINLINE __m128i convert_yv24_chroma_block_to_yv12_sse2(const __m1
   if constexpr(sizeof(pixel_t) == 1)
     packed = _mm_packus_epi16(avg1, avg2);
   else if constexpr(sizeof(pixel_t) == 2) {
-    packed = _MM_PACKUS_EPI32(avg1, avg2); // SSE4.1 simul for SSE2
+    packed = _mm_packus_epi32(avg1, avg2); // SSE4.1 simul for SSE2
   }
   return _mm_xor_si128(packed, ffff);
 }
 
 template<typename pixel_t>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static AVS_FORCEINLINE __m128i convert_yv24_chroma_block_to_yv12_sse41(const __m128i &src_line0_p0, const __m128i &src_line1_p0, const __m128i &src_line0_p1, const __m128i &src_line1_p1, const __m128i &ffff, const __m128i &mask)
 {
@@ -507,7 +515,7 @@ static void convert_yv24_chroma_to_yv12_sse2(BYTE *dstp, const BYTE *srcp, int d
 
 template<typename pixel_t>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static void convert_yv24_chroma_to_yv12_sse41(BYTE *dstp, const BYTE *srcp, int dst_pitch, int src_pitch, int dst_width, const int dst_height)
 {
@@ -708,14 +716,14 @@ static AVS_FORCEINLINE __m128i convert_yv24_chroma_block_to_yv16_sse2(const __m1
   if constexpr(sizeof(pixel_t) == 1)
     packed = _mm_packus_epi16(avg1, avg2);
   else { // if constexpr(sizeof(pixel_t) == 2)
-    packed = _MM_PACKUS_EPI32(avg1, avg2); // SSE4.1 simul for SSE2
+    packed = _mm_packus_epi32(avg1, avg2); // SSE4.1 simul for SSE2
   }
   return packed;
 }
 
 template<typename pixel_t>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static AVS_FORCEINLINE __m128i convert_yv24_chroma_block_to_yv16_sse41(const __m128i &src_line0_p0, const __m128i &src_line0_p1, const __m128i &mask)
 {
@@ -785,7 +793,7 @@ static void convert_yv24_chroma_to_yv16_sse2(BYTE *dstp, const BYTE *srcp, int d
 
 template<typename pixel_t>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static void convert_yv24_chroma_to_yv16_sse41(BYTE *dstp, const BYTE *srcp, int dst_pitch, int src_pitch, int dst_width, const int dst_height)
 {

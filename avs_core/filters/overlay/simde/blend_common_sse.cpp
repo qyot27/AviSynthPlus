@@ -41,8 +41,18 @@
 #include "../../../core/internal.h"
 
 // Intrinsics for SSE4.1, SSSE3, SSE3, SSE2, ISSE and MMX
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
 #include <smmintrin.h>
+#define SSE41 __attribute__((__target__("sse4.1")))
+#define SSE2 __attribute__((__target__("sse2")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h>
+#define SSE41
+#define SSE2
+#endif
 #include <stdint.h>
 //#include <type_traits>
 
@@ -79,7 +89,7 @@ AVS_FORCEINLINE static __m128i overlay_blend_sse2_uint8_core(const __m128i& p1, 
 
 template<int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 AVS_FORCEINLINE static __m128i overlay_blend_sse41_uint16_core(const __m128i& p1, const __m128i& p2, const __m128i& mask, const __m128i& v128)
 {
@@ -117,7 +127,7 @@ AVS_FORCEINLINE static __m128i overlay_merge_mask_sse2_uint8(const __m128i& p1, 
 
 template<int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 AVS_FORCEINLINE static __m128i overlay_merge_mask_sse41_uint16(const __m128i& p1, const __m128i& p2)
 {
@@ -273,7 +283,7 @@ void overlay_blend_sse2_plane_masked(BYTE *p1, const BYTE *p2, const BYTE *mask,
 
 template<typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_blend_sse41_plane_masked(BYTE *p1, const BYTE *p2, const BYTE *mask,
   const int p1_pitch, const int p2_pitch, const int mask_pitch,
@@ -340,7 +350,7 @@ void overlay_blend_sse41_plane_masked(BYTE *p1, const BYTE *p2, const BYTE *mask
         __m128i unpacked_mask_h = _mm_unpackhi_epi16(msk, zero);
 
         // for uint16, this is SSE4
-        // maybe _MM_MULLO_EPI32 and _MM_PACKUS_EPI32 could be used, but sometimes C is faster
+        // maybe _MM_MULLO_EPI32 and _mm_packus_epi32 could be used, but sometimes C is faster
         __m128i result_l = overlay_blend_sse41_uint16_core<bits_per_pixel>(unpacked_p1_l, unpacked_p2_l, unpacked_mask_l, v128);
         __m128i result_h = overlay_blend_sse41_uint16_core<bits_per_pixel>(unpacked_p1_h, unpacked_p2_h, unpacked_mask_h, v128);
 
@@ -397,7 +407,7 @@ template void overlay_blend_sse41_plane_masked<uint16_t, 16>(BYTE* p1, const BYT
 
 template<typename pixel_t>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static AVS_FORCEINLINE void Eightpixels_to_Eightfloats(const pixel_t* src, __m128& src_lo, __m128& src_hi, __m128i& zero) {
   __m128i srci;
@@ -414,7 +424,7 @@ static AVS_FORCEINLINE void Eightpixels_to_Eightfloats(const pixel_t* src, __m12
 
 template<typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static AVS_FORCEINLINE void Store_Eightpixels(pixel_t* dst, __m128 what_lo, __m128 what_hi, const __m128 rounder) {
   what_lo = _mm_add_ps(what_lo, rounder); // round
@@ -440,7 +450,7 @@ static AVS_FORCEINLINE void Store_Eightpixels(pixel_t* dst, __m128 what_lo, __m1
 
 template<typename pixel_t>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse2")))
+SSE2
 #endif
 static AVS_FORCEINLINE void Eightpixels_to_Eightfloats_sse2(const pixel_t* src, __m128& src_lo, __m128& src_hi, __m128i& zero) {
   __m128i srci;
@@ -457,7 +467,7 @@ static AVS_FORCEINLINE void Eightpixels_to_Eightfloats_sse2(const pixel_t* src, 
 
 template<typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse2")))
+SSE2
 #endif
 static AVS_FORCEINLINE void Store_Eightpixels_sse2(pixel_t* dst, __m128 what_lo, __m128 what_hi, const __m128 rounder) {
   what_lo = _mm_add_ps(what_lo, rounder); // round
@@ -470,7 +480,7 @@ static AVS_FORCEINLINE void Store_Eightpixels_sse2(pixel_t* dst, __m128 what_lo,
     _mm_storel_epi64(reinterpret_cast<__m128i*>(dst), result64);
   }
   else {
-    auto result = _MM_PACKUS_EPI32(si32_lo, si32_hi); // 2x4x32bit -> 8x16
+    auto result = _mm_packus_epi32(si32_lo, si32_hi); // 2x4x32bit -> 8x16
       /* when mask is 0..1 checked then this is not possible
     if constexpr (bits_per_pixel < 16) { // otherwise no clamp needed
       constexpr int max_pixel_value = (1 << bits_per_pixel) - 1;
@@ -501,7 +511,7 @@ AVS_FORCEINLINE static __m128 overlay_blend_sse_core_new(const __m128& p1_f, con
 
 template<bool has_mask, typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_blend_sse41_uint(BYTE* p1, const BYTE* p2, const BYTE* mask,
   const int p1_pitch, const int p2_pitch, const int mask_pitch,
@@ -586,7 +596,7 @@ template void overlay_blend_sse41_uint<false, uint16_t, 16>(BYTE* p1, const BYTE
 
 template<bool has_mask, typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse2")))
+SSE2
 #endif
 void overlay_blend_sse2_uint(BYTE* p1, const BYTE* p2, const BYTE* mask,
   const int p1_pitch, const int p2_pitch, const int mask_pitch,
@@ -843,7 +853,7 @@ void overlay_blend_sse2_plane_opacity(BYTE *p1, const BYTE *p2, const BYTE* /*ma
 
 template<int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_blend_sse41_plane_opacity_uint16(BYTE *p1, const BYTE *p2, const BYTE* /*mask*/,
   const int p1_pitch, const int p2_pitch, const int /*mask_pitch*/,
@@ -900,7 +910,7 @@ void overlay_blend_sse41_plane_opacity_uint16(BYTE *p1, const BYTE *p2, const BY
       __m128i unpacked_p2_h = _mm_unpacklo_epi16(p2_h, zero);
 
       // for uint16, this is SSE4
-      // maybe _MM_MULLO_EPI32 and _MM_PACKUS_EPI32 could be used, but sometimes C is faster
+      // maybe _MM_MULLO_EPI32 and _mm_packus_epi32 could be used, but sometimes C is faster
       __m128i result_l = overlay_blend_sse41_uint16_core<bits_per_pixel>(unpacked_p1_l, unpacked_p2_l, mask, v128);
       __m128i result_h = overlay_blend_sse41_uint16_core<bits_per_pixel>(unpacked_p1_h, unpacked_p2_h, mask, v128);
 
@@ -1069,7 +1079,7 @@ void overlay_blend_sse2_plane_masked_opacity(BYTE *p1, const BYTE *p2, const BYT
 // 8 or 16 bits
 template<typename pixel_t, int bits_per_pixel>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_blend_sse41_plane_masked_opacity(BYTE *p1, const BYTE *p2, const BYTE *mask,
   const int p1_pitch, const int p2_pitch, const int mask_pitch,
@@ -1144,7 +1154,7 @@ void overlay_blend_sse41_plane_masked_opacity(BYTE *p1, const BYTE *p2, const BY
         __m128i unpacked_mask_h = _mm_unpackhi_epi16(msk, zero);
 
         // for uint16, this is SSE4
-        // maybe _MM_MULLO_EPI32 and _MM_PACKUS_EPI32 could be used, but sometimes C is faster
+        // maybe _MM_MULLO_EPI32 and _mm_packus_epi32 could be used, but sometimes C is faster
         unpacked_mask_l = overlay_merge_mask_sse41_uint16<bits_per_pixel>(unpacked_mask_l, opacity_mask);
         unpacked_mask_h = overlay_merge_mask_sse41_uint16<bits_per_pixel>(unpacked_mask_h, opacity_mask);
 
@@ -1350,7 +1360,7 @@ void overlay_darklighten_sse2(BYTE *p1Y, BYTE *p1U, BYTE *p1V, const BYTE *p2Y, 
 
 template <OverlaySseCompare compare, OverlayCCompare compare_c>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void overlay_darklighten_sse41(BYTE *p1Y, BYTE *p1U, BYTE *p1V, const BYTE *p2Y, const BYTE *p2U, const BYTE *p2V, int p1_pitch, int p2_pitch, int width, int height)
 {

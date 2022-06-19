@@ -39,6 +39,8 @@
 #include "blend_common.h"
 #ifdef INTEL_INTRINSICS
 #include "intel/blend_common_sse.h"
+#else
+#include "simde/blend_common_sse.h"
 #endif
 
 #include <stdint.h>

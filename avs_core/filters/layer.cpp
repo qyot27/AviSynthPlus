@@ -40,6 +40,8 @@
 #include "layer.h"
 #ifdef INTEL_INTRINSICS
 #include "intel/layer_sse.h"
+#else
+#include "simde/layer_sse.h"
 #endif
 #ifdef AVS_WINDOWS
 #include <avs/win.h>
@@ -228,7 +230,7 @@ PVideoFrame __stdcall Mask::GetFrame(int n, IScriptEnvironment* env)
     const int src2_pitch = src2->GetPitch();
 
     // clip1_alpha = greyscale(clip2)
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2) && IsPtrAligned(src1p, 16) && IsPtrAligned(src2p, 16))
     {
       mask_sse2(src1p, src2p, src1_pitch, src2_pitch, vi.width, vi.height);
@@ -380,7 +382,7 @@ PVideoFrame __stdcall ColorKeyMask::GetFrame(int n, IScriptEnvironment* env)
   }
   else {
     // RGB32, RGB64
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2) && IsPtrAligned(pf, 16))
     {
       colorkeymask_sse2(pf, pitch, color, vi.height, rowsize, tolB, tolG, tolR);
@@ -653,7 +655,7 @@ static void invert_plane_float_c(BYTE* frame, int pitch, int row_size, int heigh
 }
 
 static void invert_frame(BYTE* frame, int pitch, int rowsize, int height, int mask, uint64_t mask64, int pixelsize, IScriptEnvironment* env) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if ((pixelsize == 1 || pixelsize == 2) && (env->GetCPUFlags() & CPUF_SSE2) && IsPtrAligned(frame, 16))
   {
     if (pixelsize == 1)
@@ -678,7 +680,7 @@ static void invert_frame(BYTE* frame, int pitch, int rowsize, int height, int ma
 }
 
 static void invert_plane(BYTE* frame, int pitch, int rowsize, int height, int pixelsize, uint64_t mask64, bool chroma, IScriptEnvironment* env) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if ((pixelsize == 1 || pixelsize == 2) && (env->GetCPUFlags() & CPUF_SSE2) && IsPtrAligned(frame, 16))
   {
     if (pixelsize == 1)
@@ -3469,7 +3471,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
     {
       if (chroma) // Use chroma of the overlay_clip.
       {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if ((env->GetCPUFlags() & CPUF_SSE2) && IsPtrAligned(src1p, 16) && IsPtrAligned(src2p, 16))
         {
           layer_yuy2_mul_sse2<true>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3489,7 +3491,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
 
       }
       else {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if ((env->GetCPUFlags() & CPUF_SSE2) && IsPtrAligned(src1p, 16) && IsPtrAligned(src2p, 16))
         {
           layer_yuy2_mul_sse2<false>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3511,7 +3513,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
     {
       if (chroma)
       {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if (env->GetCPUFlags() & CPUF_SSE2)
         {
           layer_yuy2_add_sse2<true>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3529,7 +3531,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
         }
       }
       else {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if (env->GetCPUFlags() & CPUF_SSE2)
         {
           layer_yuy2_add_sse2<false>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3550,7 +3552,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
     if (!lstrcmpi(Op, "Fast"))
     {
       if (chroma) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if ((env->GetCPUFlags() & CPUF_SSE2) && IsPtrAligned(src1p, 16) && IsPtrAligned(src2p, 16))
         {
           layer_yuy2_fast_sse2(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3575,7 +3577,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
     if (!lstrcmpi(Op, "Subtract"))
     {
       if (chroma) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if (env->GetCPUFlags() & CPUF_SSE2)
         {
           layer_yuy2_subtract_sse2<true>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3593,7 +3595,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
         }
       }
       else {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if (env->GetCPUFlags() & CPUF_SSE2)
         {
           layer_yuy2_subtract_sse2<false>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3613,7 +3615,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
     }
     if (!lstrcmpi(Op, "Lighten")) {
       // only chroma == true
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
       {
         layer_yuy2_lighten_darken_sse2<LIGHTEN>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel, ThresholdParam);
@@ -3632,7 +3634,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
     }
     if (!lstrcmpi(Op, "Darken")) {
       // only chroma == true
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
       {
         layer_yuy2_lighten_darken_sse2<DARKEN>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel, ThresholdParam);
@@ -3670,7 +3672,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
     {
       if (chroma)
       {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2))
         {
           layer_rgb32_mul_sse2<true>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3692,7 +3694,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
       }
       else // Mul, chroma==false
       {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2))
         {
           layer_rgb32_mul_sse2<false>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3720,7 +3722,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
       // yuy2: base = base + ((overlay-base)*(      level    )/256)/256 (no alpha)
       if (chroma)
       {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2))
         {
           layer_rgb32_add_sse2<true>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3742,7 +3744,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
       }
       else // Add, chroma == false
       {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2))
         {
           layer_rgb32_add_sse2<false>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3767,7 +3769,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
     {
       // Copy overlay_clip over base_clip in areas where overlay_clip is lighter by threshold.
       // only chroma == true
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2))
       {
         layer_rgb32_lighten_darken_sse2<LIGHTEN>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel, thresh);
@@ -3791,7 +3793,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
     {
       // Copy overlay_clip over base_clip in areas where overlay_clip is darker by threshold.
       // only chroma == true
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2))
       {
         layer_rgb32_lighten_darken_sse2<DARKEN>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel, thresh);
@@ -3817,7 +3819,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
       // use_chroma must be true; level and threshold are not used.
       // The result is simply the average of base_clip and overlay_clip.
       // only chroma == true
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2) && IsPtrAligned(src1p, 16) && IsPtrAligned(src2p, 16))
       {
         layer_rgb32_fast_sse2(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3843,7 +3845,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
       // Similar to add, but overlay_clip is inverted before adding.
       if (chroma)
       {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2))
         {
           layer_rgb32_subtract_sse2<true>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -3865,7 +3867,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
       }
       else
       {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if ((pixelsize == 1) && (env->GetCPUFlags() & CPUF_SSE2))
         {
           layer_rgb32_subtract_sse2<false>(src1p, src2p, src1_pitch, src2_pitch, width, height, mylevel);
@@ -4248,7 +4250,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
         if (!lstrcmpi(Op, "Fast"))
         {
           // only chroma == true
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
           if (env->GetCPUFlags() & CPUF_SSE2 && bits_per_pixel != 32)
           {
             if (bits_per_pixel == 8)
@@ -4565,7 +4567,7 @@ PVideoFrame __stdcall Layer::GetFrame(int n, IScriptEnvironment* env)
       // only chroma == true
       // target alpha channel is unaffected
       for (int i = 0; i < std::min(vi.NumComponents(), 3); i++) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if (env->GetCPUFlags() & CPUF_SSE2 && bits_per_pixel != 32)
         {
           if (bits_per_pixel == 8)

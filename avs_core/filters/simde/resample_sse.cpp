@@ -39,8 +39,18 @@
 #include "../resample.h"
 
 // Intrinsics for SSE4.1, SSSE3, SSE3, SSE2, ISSE and MMX
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
 #include <smmintrin.h>
+#define SSE41 __attribute__((__target__("sse4.1")))
+#define SSSE3 __attribute__((__target__("ssse3")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h>
+#define SSE41
+#define SSSE3
+#endif
 #include "../../core/internal.h"
 
 
@@ -256,7 +266,7 @@ void resize_v_sse2_planar(BYTE* dst, const BYTE* src, int dst_pitch, int src_pit
 
 // The only difference between resize_v_sse41_planar and resize_v_ssse3_planar is the load operation
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void resize_v_sse41_planar(BYTE* dst, const BYTE* src, int dst_pitch, int src_pitch, ResamplingProgram* program, int width, int target_height, int bits_per_pixel, const int* pitch_table, const void* storage)
 {
@@ -329,7 +339,7 @@ void resize_v_sse41_planar(BYTE* dst, const BYTE* src, int dst_pitch, int src_pi
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void resize_v_ssse3_planar(BYTE* dst, const BYTE* src, int dst_pitch, int src_pitch, ResamplingProgram* program, int width, int target_height, int bits_per_pixel, const int* pitch_table, const void* storage)
 {
@@ -498,7 +508,7 @@ AVS_FORCEINLINE static void process_one_pixel_h_float_mask(const float* src, int
 // filtersizealigned8: special: 1, 2. Generic: -1
 template<int filtersizealigned8, int filtersizemod8>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void resizer_h_ssse3_generic_float(BYTE* dst8, const BYTE* src8, int dst_pitch, int src_pitch, ResamplingProgram* program, int width, int height, int bits_per_pixel)
 {
@@ -720,7 +730,7 @@ AVS_FORCEINLINE static void process_one_pixel_h_uint16_t(const uint16_t* src, in
 // filter_size > 16 -> use parameter AlignNumber(program->filter_size_numOfFullBlk8, 8) / 8;
 template<bool lessthan16bit, int filtersizealigned8>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 static void internal_resizer_h_ssse3_generic_uint16_t(BYTE* dst8, const BYTE* src8, int dst_pitch, int src_pitch, ResamplingProgram* program, int width, int height, int bits_per_pixel)
 {
@@ -780,11 +790,11 @@ static void internal_resizer_h_ssse3_generic_uint16_t(BYTE* dst8, const BYTE* sr
         result = _mm_add_epi32(result, shiftfromsigned);
       result = _mm_srai_epi32(result, FPScale16bits); // shift back integer arithmetic 13 bits precision
 
-      // _MM_PACKUS_EPI32: SSE4.1 simul
-      __m128i result_4x_uint16 = _MM_PACKUS_EPI32(result, zero); // 4*32+zeros = lower 4*16 OK
+      // _mm_packus_epi32: SSE4.1 simul
+      __m128i result_4x_uint16 = _mm_packus_epi32(result, zero); // 4*32+zeros = lower 4*16 OK
       // extra clamp for 10-14 bit
       if (lessthan16bit)
-        result_4x_uint16 = _MM_MIN_EPU16(result_4x_uint16, clamp_limit);
+        result_4x_uint16 = _mm_min_epu16(result_4x_uint16, clamp_limit);
       _mm_storel_epi64(reinterpret_cast<__m128i*>(dst + x), result_4x_uint16);
 
     }
@@ -796,7 +806,7 @@ static void internal_resizer_h_ssse3_generic_uint16_t(BYTE* dst8, const BYTE* sr
 
 template<bool lessthan16bit, int filtersizealigned8>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static void internal_resizer_h_sse41_generic_uint16_t(BYTE* dst8, const BYTE* src8, int dst_pitch, int src_pitch, ResamplingProgram* program, int width, int height, int bits_per_pixel)
 {
@@ -872,7 +882,7 @@ static void internal_resizer_h_sse41_generic_uint16_t(BYTE* dst8, const BYTE* sr
 
 template<bool lessthan16bit>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void resizer_h_ssse3_generic_uint16_t(BYTE* dst8, const BYTE* src8, int dst_pitch, int src_pitch, ResamplingProgram* program, int width, int height, int bits_per_pixel)
 {
@@ -893,7 +903,7 @@ template void resizer_h_ssse3_generic_uint16_t<true>(BYTE* dst8, const BYTE* src
 
 template<bool lessthan16bit>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void resizer_h_sse41_generic_uint16_t(BYTE* dst8, const BYTE* src8, int dst_pitch, int src_pitch, ResamplingProgram* program, int width, int height, int bits_per_pixel)
 {
@@ -1018,9 +1028,9 @@ void internal_resize_v_sse2_planar_uint16_t(BYTE* dst0, const BYTE* src0, int ds
       result_lo = _mm_srai_epi32(result_lo, FPScale16bits); // shift back integer arithmetic 13 bits precision
       result_hi = _mm_srai_epi32(result_hi, FPScale16bits);
 
-      __m128i result_8x_uint16 = _MM_PACKUS_EPI32(result_lo, result_hi); // SSE4.1 simul
+      __m128i result_8x_uint16 = _mm_packus_epi32(result_lo, result_hi); // SSE4.1 simul
       if (lessthan16bit)
-        result_8x_uint16 = _MM_MIN_EPU16(result_8x_uint16, clamp_limit); // SSE4.1 simul extra clamp for 10-14 bit
+        result_8x_uint16 = _mm_min_epu16(result_8x_uint16, clamp_limit); // SSE4.1 simul extra clamp for 10-14 bit
       _mm_store_si128(reinterpret_cast<__m128i*>(dst + x), result_8x_uint16);
     }
 
@@ -1047,7 +1057,7 @@ void internal_resize_v_sse2_planar_uint16_t(BYTE* dst0, const BYTE* src0, int ds
 
 template<bool lessthan16bit, int _filter_size_numOfFullBlk8, int filtersizemod8>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void internal_resize_v_sse41_planar_uint16_t(BYTE * dst0, const BYTE * src0, int dst_pitch, int src_pitch, ResamplingProgram * program, int width, int target_height, int bits_per_pixel, const int* pitch_table, const void* storage)
 {
@@ -1253,7 +1263,7 @@ template void resize_v_sse2_planar_uint16_t<true>(BYTE * dst0, const BYTE * src0
 
 template<bool lessthan16bit>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void resize_v_sse41_planar_uint16_t(BYTE * dst0, const BYTE * src0, int dst_pitch, int src_pitch, ResamplingProgram * program, int width, int target_height, int bits_per_pixel, const int* pitch_table, const void* storage)
 {
@@ -1480,7 +1490,7 @@ void resize_v_sse2_planar_float(BYTE * dst0, const BYTE * src0, int dst_pitch, i
 //-------- uint8_t Horizontal (8bit)
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void resizer_h_ssse3_generic(BYTE * dst, const BYTE * src, int dst_pitch, int src_pitch, ResamplingProgram * program, int width, int height, int bits_per_pixel)
 {
@@ -1564,7 +1574,7 @@ void resizer_h_ssse3_generic(BYTE * dst, const BYTE * src, int dst_pitch, int sr
 }
 
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void resizer_h_ssse3_8(BYTE * dst, const BYTE * src, int dst_pitch, int src_pitch, ResamplingProgram * program, int width, int height, int bits_per_pixel)
 {

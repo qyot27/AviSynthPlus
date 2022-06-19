@@ -39,6 +39,9 @@
 #ifdef INTEL_INTRINSICS
 #include "intel/blend_common_sse.h"
 #include "intel/blend_common_avx2.h"
+#else
+#include "simde/blend_common_sse.h"
+#include "simde/blend_common_avx2.h"
 #endif
 
 

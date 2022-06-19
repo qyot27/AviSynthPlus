@@ -38,8 +38,16 @@
 #include <stdint.h>
 #include <type_traits>
 
+#ifdef INTEL_INTRINSICS
 #include "emmintrin.h"
 #include "smmintrin.h"
+#define SSE41 __attribute__((__target__("sse4.1")))
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h>
+#define SSE41
+#endif
 
 template<typename pixel_t>
 static AVS_FORCEINLINE __m128 Fourpixels_to_floats(const pixel_t* src) {
@@ -95,7 +103,7 @@ static AVS_FORCEINLINE __m128i _MM_PACKUS_4_EPI32(__m128i a)
 
 template<typename pixel_t>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static AVS_FORCEINLINE void Store_Fourpixels(pixel_t* dst, __m128 what, const __m128 rounder) {
   what = _mm_add_ps(what, rounder); // round
@@ -113,7 +121,7 @@ static AVS_FORCEINLINE void Store_Fourpixels(pixel_t* dst, __m128 what, const __
 
 template<typename pixel_t>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 static AVS_FORCEINLINE void Store_FourChromapixels(pixel_t* dst, __m128 what, const __m128 half_plus_rounder) {
   what = _mm_add_ps(what, half_plus_rounder); // chroma offset back with rounder
@@ -132,7 +140,7 @@ static AVS_FORCEINLINE void Store_FourChromapixels(pixel_t* dst, __m128 what, co
 
 template<typename pixel_t, bool opacity_is_full, bool has_mask>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void of_multiply_sse41(
   int bits_per_pixel,
@@ -284,56 +292,56 @@ void of_multiply_sse41(
 // instantiate
 template
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void of_multiply_sse41<uint8_t, false, false>(int bits_per_pixel, const float opacity_f, const int opacity, int width, int height,
   const uint8_t* ovY, int overlaypitch, uint8_t* baseY, uint8_t* baseU, uint8_t* baseV, int basepitch, const uint8_t* maskY, const uint8_t* maskU, const uint8_t* maskV, int maskpitch);
 
 template
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void of_multiply_sse41<uint8_t, false, true>(int bits_per_pixel, const float opacity_f, const int opacity, int width, int height,
   const uint8_t* ovY, int overlaypitch, uint8_t* baseY, uint8_t* baseU, uint8_t* baseV, int basepitch, const uint8_t* maskY, const uint8_t* maskU, const uint8_t* maskV, int maskpitch);
 
 template
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void of_multiply_sse41<uint8_t, true, false>(int bits_per_pixel, const float opacity_f, const int opacity, int width, int height,
   const uint8_t* ovY, int overlaypitch, uint8_t* baseY, uint8_t* baseU, uint8_t* baseV, int basepitch, const uint8_t* maskY, const uint8_t* maskU, const uint8_t* maskV, int maskpitch);
 
 template
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void of_multiply_sse41<uint8_t, true, true>(int bits_per_pixel, const float opacity_f, const int opacity, int width, int height,
   const uint8_t* ovY, int overlaypitch, uint8_t* baseY, uint8_t* baseU, uint8_t* baseV, int basepitch, const uint8_t* maskY, const uint8_t* maskU, const uint8_t* maskV, int maskpitch);
 
 template
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void of_multiply_sse41<uint16_t, false, false>(int bits_per_pixel, const float opacity_f, const int opacity, int width, int height,
   const uint16_t* ovY, int overlaypitch, uint16_t* baseY, uint16_t* baseU, uint16_t* baseV, int basepitch, const uint16_t* maskY, const uint16_t* maskU, const uint16_t* maskV, int maskpitch);
 
 template
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void of_multiply_sse41<uint16_t, false, true>(int bits_per_pixel, const float opacity_f, const int opacity, int width, int height,
   const uint16_t* ovY, int overlaypitch, uint16_t* baseY, uint16_t* baseU, uint16_t* baseV, int basepitch, const uint16_t* maskY, const uint16_t* maskU, const uint16_t* maskV, int maskpitch);
 
 template
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void of_multiply_sse41<uint16_t, true, false>(int bits_per_pixel, const float opacity_f, const int opacity, int width, int height,
   const uint16_t* ovY, int overlaypitch, uint16_t* baseY, uint16_t* baseU, uint16_t* baseV, int basepitch, const uint16_t* maskY, const uint16_t* maskU, const uint16_t* maskV, int maskpitch);
 
 template
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("sse4.1")))
+SSE41
 #endif
 void of_multiply_sse41<uint16_t, true, true>(int bits_per_pixel, const float opacity_f, const int opacity, int width, int height,
   const uint16_t* ovY, int overlaypitch, uint16_t* baseY, uint16_t* baseU, uint16_t* baseV, int basepitch, const uint16_t* maskY, const uint16_t* maskU, const uint16_t* maskV, int maskpitch);

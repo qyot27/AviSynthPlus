@@ -47,6 +47,8 @@
 #include "planeswap.h"
 #ifdef INTEL_INTRINSICS
 #include "intel/planeswap_sse.h"
+#else
+#include "simde/planeswap_sse.h"
 #endif
 #include "../core/internal.h"
 #include <algorithm>
@@ -145,7 +147,7 @@ PVideoFrame __stdcall SwapUV::GetFrame(int n, IScriptEnvironment* env)
   int src_pitch = src->GetPitch();
   int dst_pitch = dst->GetPitch();
   int rowsize = src->GetRowSize();
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if ((env->GetCPUFlags() & CPUF_SSSE3))
     yuy2_swap_ssse3(srcp, dstp, src_pitch, dst_pitch, rowsize, vi.height);
   else if ((env->GetCPUFlags() & CPUF_SSE2))
@@ -330,7 +332,7 @@ PVideoFrame __stdcall SwapUVToY::GetFrame(int n, IScriptEnvironment* env)
 
     if (vi.IsYUY2()) {  // YUY2 To YUY2
       int rowsize = dst->GetRowSize();
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2) {
         yuy2_uvtoy_sse2(srcp, dstp, src_pitch, dst_pitch, rowsize, vi.height, pos);
         return dst;
@@ -354,7 +356,7 @@ PVideoFrame __stdcall SwapUVToY::GetFrame(int n, IScriptEnvironment* env)
     auto props = env->getFramePropsRW(dst);
     env->propDeleteKey(props, "_ChromaLocation");
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (env->GetCPUFlags() & CPUF_SSE2) {
       yuy2_uvtoy8_sse2(srcp, dstp, src_pitch, dst_pitch, vi.width, vi.height, pos);
       return dst;
@@ -552,7 +554,7 @@ PVideoFrame __stdcall SwapYToUV::GetFrame(int n, IScriptEnvironment* env) {
       PVideoFrame srcy = clipY->GetFrame(n, env);
       const BYTE* srcp_y = srcy->GetReadPtr();
       const int pitch_y = srcy->GetPitch();
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (env->GetCPUFlags() & CPUF_SSE2)
         yuy2_ytouv_sse2<true>(srcp_y, srcp_u, srcp_v, dstp, pitch_y, pitch_u, pitch_v, dst_pitch, rowsize, vi.height);
       else

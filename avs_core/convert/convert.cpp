@@ -192,7 +192,7 @@ PVideoFrame __stdcall ConvertToRGB::GetFrame(int n, IScriptEnvironment* env)
   int tv_scale = matrix.offset_y;
 
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if (env->GetCPUFlags() & CPUF_SSE2) {
     if (vi.IsRGB32()) {
       convert_yuy2_to_rgb_sse2<4>(srcp, dstp, src_pitch, dst_pitch, vi.height, vi.width,
@@ -456,7 +456,7 @@ PVideoFrame __stdcall ConvertToYV12::GetFrame(int n, IScriptEnvironment* env) {
   PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
   if (interlaced) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (env->GetCPUFlags() & CPUF_SSE2)
     {
       convert_yuy2_to_yv12_interlaced_sse2(src->GetReadPtr(), src->GetRowSize(), src->GetPitch(),
@@ -482,7 +482,7 @@ PVideoFrame __stdcall ConvertToYV12::GetFrame(int n, IScriptEnvironment* env) {
   }
   else
   {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (env->GetCPUFlags() & CPUF_SSE2)
     {
       convert_yuy2_to_yv12_progressive_sse2(src->GetReadPtr(), src->GetRowSize(), src->GetPitch(),

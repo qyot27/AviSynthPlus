@@ -38,6 +38,10 @@
 #ifdef INTEL_INTRINSICS
 #include "intel/conditional_functions_sse.h"
 #include "../intel/focus_sse.h" // sad
+#else
+#include "simde/conditional_functions_sse.h"
+//#include "../simde/focus_sse.h" // sad
+#include "../focus.h" // sad
 #endif
 #include "../../core/internal.h"
 #include <avs/config.h>
@@ -237,7 +241,7 @@ AVSValue AveragePlane::AvgPlane(AVSValue clip, void* , int plane, int offset, IS
   else // worst case
     sum_in_32bits = ((int64_t)total_pixels * (pixelsize == 1 ? 255 : 65535)) <= std::numeric_limits<int>::max();
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if ((pixelsize==1) && sum_in_32bits && (env->GetCPUFlags() & CPUF_SSE2) && width >= 16) {
     sum = get_sum_of_pixels_sse2(srcp, height, width, pitch);
   } else
@@ -389,7 +393,7 @@ AVSValue ComparePlane::CmpPlane(AVSValue clip, AVSValue clip2, void* , int plane
 
   // for c: width, for sse: rowsize
   if (vi.IsRGB32() || vi.IsRGB64()) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if ((pixelsize == 2) && (env->GetCPUFlags() & CPUF_SSE2) && rowsize >= 16) {
       // int64 internally, no sum_in_32bits
       sad = (double)calculate_sad_8_or_16_sse2<uint16_t,true>(srcp, srcp2, pitch, pitch2, width*pixelsize, height); // in focus. 21.68/21.39
@@ -409,7 +413,7 @@ AVSValue ComparePlane::CmpPlane(AVSValue clip, AVSValue clip2, void* , int plane
           sad = (double)get_sad_rgb_c<uint16_t>(srcp, srcp2, height, width, pitch, pitch2);
       }
   } else {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if ((pixelsize==2) && (env->GetCPUFlags() & CPUF_SSE2) && rowsize >= 16) {
       sad = (double)calculate_sad_8_or_16_sse2<uint16_t,false>(srcp, srcp2, pitch, pitch2, rowsize, height); // in focus, no overflow
     } else
@@ -496,7 +500,7 @@ AVSValue ComparePlane::CmpPlaneSame(AVSValue clip, void* , int offset, int plane
   double sad = 0;
   // for c: width, for sse: rowsize
   if (vi.IsRGB32() || vi.IsRGB64()) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if ((pixelsize == 2) && (env->GetCPUFlags() & CPUF_SSE2) && rowsize >= 16) {
       // int64 internally, no sum_in_32bits
       sad = (double)calculate_sad_8_or_16_sse2<uint16_t,true>(srcp, srcp2, pitch, pitch2, rowsize, height); // in focus. 21.68/21.39
@@ -516,7 +520,7 @@ AVSValue ComparePlane::CmpPlaneSame(AVSValue clip, void* , int offset, int plane
           sad = get_sad_rgb_c<uint16_t>(srcp, srcp2, height, width, pitch, pitch2);
       }
   } else {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if ((pixelsize==2) && (env->GetCPUFlags() & CPUF_SSE2) && rowsize >= 16) {
       sad = (double)calculate_sad_8_or_16_sse2<uint16_t,false>(srcp, srcp2, pitch, pitch2, rowsize, height); // in focus, no overflow
     } else if ((pixelsize==1) && (env->GetCPUFlags() & CPUF_SSE2) && rowsize >= 16) {

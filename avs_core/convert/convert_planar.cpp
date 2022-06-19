@@ -165,7 +165,7 @@ PVideoFrame __stdcall ConvertToY::GetFrame(int n, IScriptEnvironment* env) {
   }
 
   if (yuy2_input) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (env->GetCPUFlags() & CPUF_SSE2) {
       convert_yuy2_to_y8_sse2(srcp, dstp, src_pitch, dst_pitch, width, height);
     } else
@@ -189,7 +189,7 @@ PVideoFrame __stdcall ConvertToY::GetFrame(int n, IScriptEnvironment* env) {
 
   if (packed_rgb_input) {
     srcp += src_pitch * (vi.height-1);  // We start at last line
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if ((pixelsize==1) && (env->GetCPUFlags() & CPUF_SSE2)) {
       if (pixel_step == 4) {
         convert_rgb32_to_y8_sse2(srcp, dstp, src_pitch, dst_pitch, width, height, matrix);
@@ -441,7 +441,7 @@ PVideoFrame __stdcall ConvertRGBToYUV444::GetFrame(int n, IScriptEnvironment* en
     env->ThrowError("Invalid pixel step. This is a bug.");
   }
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   // sse2 for 8 bit only (pixel_step==3,4), todo
   if (((pixel_step == 3) || (pixel_step == 4)) && (env->GetCPUFlags() & CPUF_SSE2) ) {
     if (pixel_step == 4) {
@@ -534,7 +534,7 @@ PVideoFrame __stdcall ConvertRGBToYUV444::GetFrame(int n, IScriptEnvironment* en
     BYTE *dstp[3] = { dstY, dstU, dstV };
     int dstPitch[3] = { Ypitch, UVpitch, UVpitch };
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     // integer arithmetic restricted to 8 bits
     if (bits_per_pixel == 8 && (env->GetCPUFlags() & CPUF_SSE2))
     {
@@ -679,7 +679,7 @@ PVideoFrame __stdcall ConvertYUV444ToRGB::GetFrame(int n, IScriptEnvironment* en
   const int dst_pitch = dst->GetPitch();
 
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   // todo: SSE for not only 8 bit RGB
   // packed RGB24 and RGB32
   if ((env->GetCPUFlags() & CPUF_SSE2) && (pixel_step==3 || pixel_step==4)) {
@@ -842,7 +842,7 @@ PVideoFrame __stdcall ConvertYUV444ToRGB::GetFrame(int n, IScriptEnvironment* en
     int pixelsize = vi.ComponentSize();
     int bits_per_pixel = vi.BitsPerComponent();
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     const BYTE* srcp[3] = { src->GetReadPtr(PLANAR_Y), src->GetReadPtr(PLANAR_U), src->GetReadPtr(PLANAR_V) };
     const int srcPitch[3] = { src->GetPitch(PLANAR_Y), src->GetPitch(PLANAR_U), src->GetPitch(PLANAR_V) };
 
@@ -1004,7 +1004,7 @@ PVideoFrame __stdcall ConvertYUY2ToYV16::GetFrame(int n, IScriptEnvironment* env
   BYTE* dstU = dst->GetWritePtr(PLANAR_U);
   BYTE* dstV = dst->GetWritePtr(PLANAR_V);
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if (env->GetCPUFlags() & CPUF_SSE2) {
     convert_yuy2_to_yv16_sse2(srcP, dstY, dstU, dstV, src->GetPitch(), dst->GetPitch(PLANAR_Y), dst->GetPitch(PLANAR_U), vi.width, vi.height);
   }
@@ -1067,7 +1067,7 @@ PVideoFrame __stdcall ConvertYV16ToYUY2::GetFrame(int n, IScriptEnvironment* env
 
   BYTE* dstp = dst->GetWritePtr();
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   if (env->GetCPUFlags() & CPUF_SSE2) {
     //U and V don't have to be aligned since we user movq to read from those
     convert_yv16_to_yuy2_sse2(srcY, srcU, srcV, dstp, src->GetPitch(PLANAR_Y), src->GetPitch(PLANAR_U), dst->GetPitch(), vi.width, vi.height);

@@ -38,6 +38,12 @@
 #include <avisynth.h>
 #include "../turn.h"
 
+#ifdef INTEL_INTRINSICS
+#define SSSE3 __attribute__((__target__("ssse3")))
+#else
+#define SSSE3
+#endif
+
 // Other filters (e.g. resampler) might also use these functions
 void turn_left_plane_8_sse2(const BYTE* srcp, BYTE* dstp, int src_rowsize, int src_height, int src_pitch, int dst_pitch);
 void turn_left_plane_16_sse2(const BYTE* srcp, BYTE* dstp, int src_rowsize, int src_height, int src_pitch, int dst_pitch);
@@ -52,7 +58,7 @@ void turn_right_rgb64_sse2(const BYTE *srcp, BYTE *dstp, int src_rowsize, int sr
 
 template <typename T>
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void turn_180_plane_ssse3(const BYTE* srcp, BYTE* dstp, int src_rowsize, int src_height, int src_pitch, int dst_pitch);
 

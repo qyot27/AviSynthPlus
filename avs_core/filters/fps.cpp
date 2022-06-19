@@ -673,7 +673,7 @@ PVideoFrame __stdcall ConvertFPS::GetFrame(int n, IScriptEnvironment* env)
       int invweight_i;
       float weight = (float)frac_f; // between 0 and 1.0
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       MergeFuncPtr weighted_merge_planar = getMergeFunc(bits_per_pixel, env->GetCPUFlags(), a_data, b_data, weight, /*out*/weight_i, /*out*/invweight_i);
 #else
       MergeFuncPtr weighted_merge_planar = getMergeFunc(bits_per_pixel, a_data, b_data, weight, /*out*/weight_i, /*out*/invweight_i);

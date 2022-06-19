@@ -36,6 +36,8 @@
 #include "limiter.h"
 #ifdef INTEL_INTRINSICS
 #include "intel/limiter_sse.h"
+#else
+#include "simde/limiter_sse.h"
 #endif
 #include <avs/alignment.h>
 
@@ -646,7 +648,7 @@ PVideoFrame __stdcall Limiter::GetFrame(int n, IScriptEnvironment* env) {
 			}
 			return frame;
 		}
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (env->GetCPUFlags() & CPUF_SSE2) {
       limit_plane_sse2(srcp, min_luma | (min_chroma << 8), max_luma | (max_chroma << 8), pitch, row_size, height);
       return frame;
@@ -772,7 +774,7 @@ PVideoFrame __stdcall Limiter::GetFrame(int n, IScriptEnvironment* env) {
   }
   if (vi.IsPlanar())
   {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     //todo: separate to functions and use sse2 for aligned planes even if some are unaligned
     if ((pixelsize==1) && (env->GetCPUFlags() & CPUF_SSE2)) {
         limit_plane_sse2(srcp, min_luma | (min_luma << 8), max_luma | (max_luma << 8), pitch, row_size, height);

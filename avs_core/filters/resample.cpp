@@ -37,6 +37,10 @@
 #include "intel/resample_sse.h"
 #include "intel/resample_avx2.h"
 #include "intel/turn_sse.h"
+#else
+#include "simde/resample_sse.h"
+#include "simde/resample_avx2.h"
+#include "simde/turn_sse.h"
 #endif
 #include <avs/config.h>
 
@@ -282,7 +286,7 @@ FilteredResizeH::FilteredResizeH(PClip _child, double subrange_left, double subr
       env);
   }
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   // r2592+: no target_width mod4 check, (old avs needed for unaligned frames?)
   int cpu = env->GetCPUFlags();
   fast_resize = (cpu & CPUF_SSSE3) == CPUF_SSSE3 && vi.IsPlanar();
@@ -329,14 +333,14 @@ FilteredResizeH::FilteredResizeH(PClip _child, double subrange_left, double subr
       // Initialize Turn function
       // see turn.cpp
       if (vi.IsRGB24()) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         // no intel intentionally
 #endif
         turn_left = turn_left_rgb24;
         turn_right = turn_right_rgb24;
       }
       else if (vi.IsRGB32()) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if (has_sse2) {
           turn_left = turn_left_rgb32_sse2;
           turn_right = turn_right_rgb32_sse2;
@@ -349,14 +353,14 @@ FilteredResizeH::FilteredResizeH(PClip _child, double subrange_left, double subr
         }
       }
       else if (vi.IsRGB48()) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         // no intel intentionally
 #endif
         turn_left = turn_left_rgb48_c;
         turn_right = turn_right_rgb48_c;
       }
       else if (vi.IsRGB64()) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         if (has_sse2) {
           turn_left = turn_left_rgb64_sse2;
           turn_right = turn_right_rgb64_sse2;
@@ -372,7 +376,7 @@ FilteredResizeH::FilteredResizeH(PClip _child, double subrange_left, double subr
       else {
         switch (vi.ComponentSize()) {// AVS16
         case 1: // 8 bit
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
           if (has_sse2) {
             turn_left = turn_left_plane_8_sse2;
             turn_right = turn_right_plane_8_sse2;
@@ -385,7 +389,7 @@ FilteredResizeH::FilteredResizeH(PClip _child, double subrange_left, double subr
           }
           break;
         case 2: // 16 bit
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
           if (has_sse2) {
             turn_left = turn_left_plane_16_sse2;
             turn_right = turn_right_plane_16_sse2;
@@ -398,7 +402,7 @@ FilteredResizeH::FilteredResizeH(PClip _child, double subrange_left, double subr
           }
           break;
         default: // 32 bit
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
           if (has_sse2) {
             turn_left = turn_left_plane_32_sse2;
             turn_right = turn_right_plane_32_sse2;
@@ -413,7 +417,7 @@ FilteredResizeH::FilteredResizeH(PClip _child, double subrange_left, double subr
       }
     }
     else {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       // Planar + SSSE3 = use new horizontal resizer routines
       resampler_h_luma = GetResampler(cpu, true, pixelsize, bits_per_pixel, resampling_program_luma, env);
 
@@ -536,7 +540,7 @@ ResamplerH FilteredResizeH::GetResampler(int CPU, bool aligned, int pixelsize, i
 
   if (pixelsize == 1)
   {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (CPU & CPUF_SSSE3) {
       if (CPU & CPUF_AVX2) {
         // make the resampling coefficient array mod16 friendly for simd, padding non-used coeffs with zeros
@@ -559,7 +563,7 @@ ResamplerH FilteredResizeH::GetResampler(int CPU, bool aligned, int pixelsize, i
     }
   }
   else if (pixelsize == 2) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (CPU & CPUF_SSSE3) {
       resize_h_prepare_coeff_8or16(program, env, 8); // alignment of 8 is enough for AVX2 uint16_t as well
       if (CPU & CPUF_AVX2) {
@@ -589,7 +593,7 @@ ResamplerH FilteredResizeH::GetResampler(int CPU, bool aligned, int pixelsize, i
     }
   }
   else { //if (pixelsize == 4)
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     if (CPU & CPUF_SSSE3) {
       resize_h_prepare_coeff_8or16(program, env, ALIGN_FLOAT_RESIZER_COEFF_SIZE); // alignment of 8 is enough for AVX2 float as well
 
@@ -713,7 +717,7 @@ FilteredResizeV::FilteredResizeV(PClip _child, double subrange_top, double subra
   if (vi.IsRGB() && !isRGBPfamily)
     subrange_top = vi.height - subrange_top - subrange_height; // packed RGB upside down
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   int cpu = env->GetCPUFlags();
 #else
   int cpu = 0;
@@ -863,7 +867,7 @@ ResamplerV FilteredResizeV::GetResampler(int CPU, bool _aligned_not_used, int pi
     // Other resizers
     if (pixelsize == 1)
     {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       // always aligned
       if (CPU & CPUF_AVX2)
         return resize_v_avx2_planar_uint8_t;
@@ -885,7 +889,7 @@ ResamplerV FilteredResizeV::GetResampler(int CPU, bool _aligned_not_used, int pi
     }
     else if (pixelsize == 2)
     {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       // always aligned
       if (CPU & CPUF_AVX2) {
         if (bits_per_pixel < 16)
@@ -913,7 +917,7 @@ ResamplerV FilteredResizeV::GetResampler(int CPU, bool _aligned_not_used, int pi
     }
     else // pixelsize== 4
     {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
       if (CPU & CPUF_AVX2) {
         return resize_v_avx2_planar_float;
       }

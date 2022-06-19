@@ -43,12 +43,18 @@
 
 #include <avisynth.h>
 
+#ifdef INTEL_INTRINSICS
+#define SSSE3 __attribute__((__target__("ssse3")))
+#else
+#define SSSE3
+#endif
+
 #ifdef X86_32
 void yuy2_swap_isse(const BYTE* srcp, BYTE* dstp, int src_pitch, int dst_pitch, int width, int height);
 #endif
 void yuy2_swap_sse2(const BYTE* srcp, BYTE* dstp, int src_pitch, int dst_pitch, int width, int height);
 #if defined(GCC) || defined(CLANG)
-__attribute__((__target__("ssse3")))
+SSSE3
 #endif
 void yuy2_swap_ssse3(const BYTE* srcp, BYTE* dstp, int src_pitch, int dst_pitch, int width, int height);
 

@@ -63,29 +63,29 @@ IF(ENABLE_INTEL_SIMD)
                                    "filters/overlay/444convert.h")
   LIST(APPEND AvsCore_Sources "${Overlay_Cpu_Sources}")
 else()
-#  FILE(GLOB Conditional_Filter_Cpu_Sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-#    "filters/conditional/simde/*.cpp"
-#    "filters/conditional/simde/*.h")
-#  LIST(APPEND AvsCore_Sources "${Conditional_Filter_Cpu_Sources}")
+  FILE(GLOB Conditional_Filter_Cpu_Sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+    "filters/conditional/simde/*.cpp"
+    "filters/conditional/simde/*.h")
+  LIST(APPEND AvsCore_Sources "${Conditional_Filter_Cpu_Sources}")
 
   FILE(GLOB Convert_Cpu_Sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "convert/simde/*.cpp"
     "convert/simde/*.h")
   LIST(APPEND AvsCore_Sources "${Convert_Cpu_Sources}")
 
-#  FILE(GLOB Filters_Cpu_Sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-#    "filters/simde/*.cpp"
-#    "filters/simde/*.h")
-#  LIST(REMOVE_ITEM AvsCore_Sources "")
+  FILE(GLOB Filters_Cpu_Sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+    "filters/simde/*.cpp"
+    "filters/simde/*.h")
+  LIST(REMOVE_ITEM AvsCore_Sources "")
 
-#  LIST(APPEND AvsCore_Sources "${Filters_Cpu_Sources}")
+  LIST(APPEND AvsCore_Sources "${Filters_Cpu_Sources}")
 
-#  FILE(GLOB Overlay_Cpu_Sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-#    "filters/overlay/simde/*.cpp"
-#    "filters/overlay/simde/*.h")
-#  LIST(REMOVE_ITEM AvsCore_Sources "filters/overlay/444convert.cpp"
-#                                   "filters/overlay/444convert.h")
-#  LIST(APPEND AvsCore_Sources "${Overlay_Cpu_Sources}")
+  FILE(GLOB Overlay_Cpu_Sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+    "filters/overlay/simde/*.cpp"
+    "filters/overlay/simde/*.h")
+  LIST(REMOVE_ITEM AvsCore_Sources "filters/overlay/444convert.cpp"
+                                   "filters/overlay/444convert.h")
+  LIST(APPEND AvsCore_Sources "${Overlay_Cpu_Sources}")
 ENDIF()
 
 IF( MSVC OR MINGW )

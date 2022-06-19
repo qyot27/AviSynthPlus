@@ -35,7 +35,12 @@
 
 #include <avisynth.h>
 #include <cstdint>
+#ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
+#endif
 #include <algorithm>
 
 // sum: sad with zero

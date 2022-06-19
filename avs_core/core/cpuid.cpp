@@ -127,8 +127,35 @@ static int CPUCheckForExtensions()
       if (IS_BIT_SET(cpuinfo[2], 1)) // [2]!
         result |= CPUF_AVX512VBMI;
     }
+#ifdef SIMDE_ENABLE_NATIVE_ALIASES
+#elif defined(ARM32) || defined(ARM64) || defined(PPC32) || defined(PPC64)
+    result |= CPUF_FPU;
+    result |= CPUF_MMX;
+    result |= CPUF_SSE | CPUF_INTEGER_SSE;
+    result |= CPUF_SSE2;
+    result |= CPUF_SSE3;
+    result |= CPUF_SSSE3;
+    result |= CPUF_SSE4_1;
+    result |= CPUF_SSE4_2;
+    result |= CPUF_MOVBE;
+    result |= CPUF_POPCNT;
+    result |= CPUF_AES;
+    result |= CPUF_F16C;
+    result |= CPUF_AVX;
+    result |= CPUF_FMA3;
+    result |= CPUF_AVX2;
+    result |= CPUF_AVX512F;
+    result |= CPUF_AVX512DQ;
+    result |= CPUF_AVX512IFMA;
+    result |= CPUF_AVX512PF;
+    result |= CPUF_AVX512ER;
+    result |= CPUF_AVX512CD;
+    result |= CPUF_AVX512BW;
+    result |= CPUF_AVX512VL;
+    result |= CPUF_AVX512VBMI;
+#endif
 #else
-    result |= CPUF_FORCE;
+   result |= CPUF_FORCE;
 
     return result;
 #endif

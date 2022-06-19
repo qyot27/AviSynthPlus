@@ -2668,7 +2668,8 @@ void ScriptEnvironment::SetMaxCPU(const char* features)
     CL_SSE4_1,
     CL_SSE4_2,
     CL_AVX,
-    CL_AVX2
+    CL_AVX2,
+    CL_NEON
   };
 
   std::string s;
@@ -2719,6 +2720,7 @@ void ScriptEnvironment::SetMaxCPU(const char* features)
     else if (streqi(t, "sse4.2")) cpulevel = CL_SSE4_2;
     else if (streqi(t, "avx")) cpulevel = CL_AVX;
     else if (streqi(t, "avx2")) cpulevel = CL_AVX2;
+    else if (streqi(t, "neon")) cpulevel = CL_NEON;
     else ThrowError("SetMaxCPU error: cpu level must be empty or none, mmx, sse, sse2, sse3, ssse3, sse4 or sse4.1, sse4.2, avx or avx2! (%s)", t);
 
     if (0 == mode) { // limit
@@ -2743,6 +2745,8 @@ void ScriptEnvironment::SetMaxCPU(const char* features)
         cpu_flags &= ~(CPUF_SSE | CPUF_INTEGER_SSE); // ?
       if (cpulevel <= CL_NONE)
         cpu_flags &= ~(CPUF_MMX);
+      if (cpulevel <= CL_NEON)
+        cpu_flags &= ~(CPUF_FORCE);
     }
     else {
       int current_flag;
@@ -2756,6 +2760,7 @@ void ScriptEnvironment::SetMaxCPU(const char* features)
       case CL_SSE2: current_flag = CPUF_SSE2; break;
       case CL_SSE: current_flag = CPUF_SSE; break;
       case CL_MMX: current_flag = CPUF_MMX; break;
+      case CL_NEON: current_flag = CPUF_NEON; break;
       default:
         current_flag = 0;
       }

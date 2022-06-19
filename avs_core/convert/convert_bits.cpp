@@ -598,7 +598,7 @@ static void convert_float_to_float_c(const BYTE* srcp, BYTE* dstp, int src_rowsi
 }
 
 static void get_convert_32_to_uintN_functions(int target_bitdepth, bool fulls, bool fulld, 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   bool sse2, bool sse4, bool avx2,
 #endif
   BitDepthConvFuncPtr& conv_function, BitDepthConvFuncPtr& conv_function_chroma, BitDepthConvFuncPtr& conv_function_a)
@@ -624,7 +624,7 @@ static void get_convert_32_to_uintN_functions(int target_bitdepth, bool fulls, b
         conv_function_chroma = convert_32_to_uintN_c<uint_X_t, true, false, false>; \
       }
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
 #undef convert_32_to_uintN_functions
 
 #define convert_32_to_uintN_functions(uint_X_t) \
@@ -718,7 +718,7 @@ static void get_convert_uintN_to_float_functions(int bits_per_pixel, bool fulls,
 }
 
 static void get_convert_uintN_to_uintN_ordered_dither_functions(int source_bitdepth, int target_bitdepth, bool fulls, bool fulld,
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   bool sse2, bool sse4, bool avx2,
 #endif
   BitDepthConvFuncPtr& conv_function, BitDepthConvFuncPtr& conv_function_chroma)
@@ -744,7 +744,7 @@ static void get_convert_uintN_to_uintN_ordered_dither_functions(int source_bitde
         conv_function_chroma = convert_ordered_dither_uint_c<uint_X_t, uint_X_dest_t, true, false, false>; \
       }
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
 #undef convert_uintN_to_uintN_ordered_dither_functions
 // dither has no "conv_function_a"
 #define convert_uintN_to_uintN_ordered_dither_functions(uint_X_t, uint_X_dest_t) \
@@ -831,7 +831,7 @@ static void get_convert_uintN_to_uintN_floyd_dither_functions(int source_bitdept
 
 
 static void get_convert_uintN_to_uintN_functions(int source_bitdepth, int target_bitdepth, bool fulls, bool fulld,
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   bool sse2, bool sse4, bool avx2,
 #endif
   BitDepthConvFuncPtr& conv_function, BitDepthConvFuncPtr& conv_function_chroma, BitDepthConvFuncPtr& conv_function_a)
@@ -857,7 +857,7 @@ static void get_convert_uintN_to_uintN_functions(int source_bitdepth, int target
         conv_function_chroma = convert_uint_c<uint_X_t, uint_X_dest_t, true, false, false>; \
       }
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
 #undef convert_uintN_to_uintN_functions
 
 #define convert_uintN_to_uintN_functions(uint_X_t, uint_X_dest_t) \
@@ -919,7 +919,7 @@ ConvertBits::ConvertBits(PClip _child, const int _dither_mode, const int _target
   bits_per_pixel = vi.BitsPerComponent();
   format_change_only = false;
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
   const bool sse2 = !!(env->GetCPUFlags() & CPUF_SSE2);
   const bool sse4 = !!(env->GetCPUFlags() & CPUF_SSE4_1);
   const bool avx2 = !!(env->GetCPUFlags() & CPUF_AVX2);
@@ -946,7 +946,7 @@ ConvertBits::ConvertBits(PClip _child, const int _dither_mode, const int _target
   if (bits_per_pixel <= 16 && target_bitdepth <= 16)
   {
     // get basic non-dithered versions
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     get_convert_uintN_to_uintN_functions(bits_per_pixel, target_bitdepth, fulls, fulld, sse2, sse4, avx2, conv_function, conv_function_chroma, conv_function_a);
 #else
     get_convert_uintN_to_uintN_functions(bits_per_pixel, target_bitdepth, fulls, fulld, conv_function, conv_function_chroma, conv_function_a);
@@ -955,7 +955,7 @@ ConvertBits::ConvertBits(PClip _child, const int _dither_mode, const int _target
       // dither is only down
       if (dither_mode == 0) {
         // ordered dither
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
         get_convert_uintN_to_uintN_ordered_dither_functions(bits_per_pixel, target_bitdepth, fulls, fulld, sse2, sse4, avx2, conv_function, conv_function_chroma);
 #else
         get_convert_uintN_to_uintN_ordered_dither_functions(bits_per_pixel, target_bitdepth, fulls, fulld, conv_function, conv_function_chroma);
@@ -970,7 +970,7 @@ ConvertBits::ConvertBits(PClip _child, const int _dither_mode, const int _target
 
   // 32->8-16 bit
   if (bits_per_pixel == 32 && target_bitdepth <= 16) {
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
     get_convert_32_to_uintN_functions(target_bitdepth, fulls, fulld, sse2, sse4, avx2, conv_function, conv_function_chroma, conv_function_a);
 #else
     get_convert_32_to_uintN_functions(target_bitdepth, fulls, fulld, conv_function, conv_function_chroma, conv_function_a);

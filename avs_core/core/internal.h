@@ -47,10 +47,11 @@
 #include <limits.h>
 #endif
 #include "InternalEnvironment.h"
-#ifdef INTEL_INTRINSICS
+
 #ifdef AVS_WINDOWS
 #include <intrin.h>
 #else
+#ifdef INTEL_INTRINSICS
 #include <x86intrin.h>
 #endif
 #endif
@@ -78,6 +79,9 @@ enum MANAGE_CACHE_KEYS
 #include <avisynth.h>
 #ifdef INTEL_INTRINSICS
 #include <emmintrin.h>
+#else
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#include <simde/x86/sse2.h>
 #endif
 #include <string>
 #include "function.h"
@@ -208,7 +212,7 @@ public:
 [[maybe_unused]] static AVS_FORCEINLINE bool IsCloseFloat(float a, float b, float threshold)
 { return (a-b+threshold <= threshold*2); }
 
-#ifdef INTEL_INTRINSICS
+#if defined(INTEL_INTRINSICS) || defined(SIMDE_ENABLE_NATIVE_ALIASES)
 // useful SIMD helpers
 
 // sse2 replacement of _mm_mullo_epi32 in SSE4.1
