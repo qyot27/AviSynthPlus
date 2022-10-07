@@ -27,9 +27,9 @@
 #if defined(X86_32) || defined(X86_64)
 #include <x86intrin.h>
 #include <cpuid.h>
-#undef __cpuid
+//#undef __cpuid
 
-static inline void __cpuid(int cpuinfo[4], int leaf) {
+static inline void avs_cpuid(int cpuinfo[4], int leaf) {
   unsigned int eax, ebx, ecx, edx;
   // for deeper leaves __get_cpuid is not enough
   __get_cpuid_count(leaf, 0, &eax, &ebx, &ecx, &edx);
@@ -38,8 +38,8 @@ static inline void __cpuid(int cpuinfo[4], int leaf) {
   cpuinfo[2] = ecx;
   cpuinfo[3] = edx;
 }
-#endif
-#endif
+#endif // X86_{32|64}
+#endif // AVS_WINDOWS
 
 #define IS_BIT_SET(bitfield, bit) ((bitfield) & (1<<(bit)) ? true : false)
 
@@ -63,7 +63,7 @@ static int CPUCheckForExtensions()
   int cpuinfo[4];
 
 #if defined(X86_32) || defined(X86_64)
-  __cpuid(cpuinfo, 1);
+  avs_cpuid(cpuinfo, 1);
   if (IS_BIT_SET(cpuinfo[3], 0))
     result |= CPUF_FPU;
   if (IS_BIT_SET(cpuinfo[3], 23))
@@ -98,7 +98,7 @@ static int CPUCheckForExtensions()
       result |= CPUF_AVX;
       if (IS_BIT_SET(cpuinfo[2], 12))
         result |= CPUF_FMA3;
-      __cpuid(cpuinfo, 7);
+      avs_cpuid(cpuinfo, 7);
       if (IS_BIT_SET(cpuinfo[1], 5))
         result |= CPUF_AVX2;
     }
@@ -107,7 +107,7 @@ static int CPUCheckForExtensions()
       // Verify that XCR0[7:5] = ‘111b’ (OPMASK state, upper 256-bit of ZMM0-ZMM15 and
       // ZMM16-ZMM31 state are enabled by OS)
       /// and that XCR0[2:1] = ‘11b’ (XMM state and YMM state are enabled by OS).
-      __cpuid(cpuinfo, 7);
+      avs_cpuid(cpuinfo, 7);
       if (IS_BIT_SET(cpuinfo[1], 16))
         result |= CPUF_AVX512F;
       if (IS_BIT_SET(cpuinfo[1], 17))
@@ -136,10 +136,10 @@ static int CPUCheckForExtensions()
 
 #if defined(X86_32) || defined(X86_64)
   // 3DNow!, 3DNow!, ISSE, FMA4
-  __cpuid(cpuinfo, 0x80000000);
+  avs_cpuid(cpuinfo, 0x80000000);
   if (cpuinfo[0] >= 0x80000001)
   {
-    __cpuid(cpuinfo, 0x80000001);
+    avs_cpuid(cpuinfo, 0x80000001);
 
     if (IS_BIT_SET(cpuinfo[3], 31))
       result |= CPUF_3DNOW;
