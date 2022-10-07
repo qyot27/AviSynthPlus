@@ -345,6 +345,10 @@ endif()
       SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -msse2 -DINTEL_INTRINSICS" )
     endif()
 
+    if( CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" )
+      SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -msse4.1" )
+    endif()
+
     if(WIN32)
       SET( CMAKE_SHARED_LINKER_FLAGS "-Wl,--enable-stdcall-fixup" )
     elseif(APPLE)
