@@ -347,6 +347,7 @@ endif()
 
     if( CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" )
       SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -msse4.1" )
+      SET( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed -static-intel")
     endif()
 
     if(WIN32)
