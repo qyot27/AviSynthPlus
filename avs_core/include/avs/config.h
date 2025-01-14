@@ -122,6 +122,14 @@
 #   error Operating system unsupported.
 #endif
 
+#if defined(AVS_WINDOWS)
+#  if defined(X86_32) || defined(X86_64)
+#    define AVS_WINDOWS_X86
+#  elif defined(ARM64) || defined(ARM32)
+#    define AVS_WINDOWS_ARM
+#  endif
+#endif
+
 // useful warnings disabler macros for supported compilers
 
 #if defined(_MSC_VER)
