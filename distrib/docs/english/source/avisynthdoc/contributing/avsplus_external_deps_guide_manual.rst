@@ -101,10 +101,76 @@ on the **%PATH%**.
     echo "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat" >> E:\Programs\ScriptTools\msvcarm.bat
 
 .. Note::
-    Creating symlinks on Windows 10 requires Administrator privileges (Open
+    Creating symlinks on Windows 10 and 11 requires Administrator privileges (Open
     Elevated Command Prompt).
 
-    Apparently Windows 11 doesn't require this.
+    On Windows 11, this can be done from a non-Admin prompt by using sudo as one would on Linux or OS X.
+
+
+pkgconf
+-------
+
+pkg-config is a tool used to detect and add headers and libraries from the filesystem.
+pkgconf is compatible with pkg-config while both being slimmer on dependencies and adding
+a couple of useful features.
+
+On Windows, MSVC can be used to build pkgconf, but meson is required.  The quickest way
+to do this is through pip.
+
+Anyone wanting to build the AviSynth+ docs already has Python, hence they also already
+have pip, and can install meson through there.  Or you have Python installed for other
+reasons anyway.  During Python installation it should have been added to the PATH.
+
+Open the Visual Studio Command Prompt and install meson:
+
+    ::
+
+        pip install meson
+
+Clone the source using Git:
+
+    ::
+
+        git clone https://github.com/pkgconf/pkgconf
+
+Create the proper build directory and move into it:
+
+    ::
+
+        mkdir pkgconf\build && ^
+        cd pkgconf\build
+
+Configure the pkgconf build:
+
+    ::
+
+        meson setup ../ -Dtests=disabled -Dprefix=C:\pkgconf_for_windows
+
+Build the source:
+
+    ::
+
+        meson compile
+
+Install pkgconf:
+
+    ::
+
+        meson install
+
+Create a symbolic link so pkg-config can be used as an alias for pkgconf:
+
+    ::
+
+        sudo mklink C:\pkgconf_for_windows\bin\pkg-config.exe C:\pkgconf_for_windows\bin\pkgconf.exe
+
+Add the folder containing pkgconf to the PATH:
+
+    ::
+
+        setx PATH "%PATH%;C:\pkgconf_for_windows\bin"
+
+Close and re-open the Command Prompt.
 
 
 SoundTouch
