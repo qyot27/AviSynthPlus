@@ -130,6 +130,10 @@
 #  endif
 #endif
 
+#if defined(MSVC) && !defined(AVS_WINDOWS_X86)
+#    error Unsupported combination of compiler, operating system, and machine architecture.
+#endif
+
 // useful warnings disabler macros for supported compilers
 
 #if defined(_MSC_VER)
