@@ -381,8 +381,8 @@ xz-tools
 
         %AVS_DEPS_BUILD_HOME% && ^
         cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps && ^
-        wget http://tukaani.org/xz/xz-5.4.2.tar.gz -O - | tar -xzvf - && ^
-        cd xz-5.4.2 && ^
+        wget http://tukaani.org/xz/xz-5.6.3.tar.gz -O - | tar -xzvf - && ^
+        cd xz-5.6.3 && ^
         mkdir build && ^
         cd build && ^
         mkdir x64 x86
@@ -393,7 +393,7 @@ x86-64
 
     ::
 
-        cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps\xz-5.4.2\build\x64
+        cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps\xz-5.6.3\build\x64
 
     ::
 
@@ -411,7 +411,7 @@ x86-32
 
     ::
 
-        cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps\xz-5.4.2\build\x86
+        cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps\xz-5.6.3\build\x86
 
     ::
 
