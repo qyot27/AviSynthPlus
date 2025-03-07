@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED( VERSION 3.6.2 )
+CMAKE_MINIMUM_REQUIRED( VERSION 3.6.2...3.11 )
 
 set(PluginName "TimeStretch")
 set(ProjectName "Plugin${PluginName}")

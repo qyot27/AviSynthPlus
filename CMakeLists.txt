@@ -45,7 +45,7 @@
 
 # "Visual Studio 16 2019" + LLVM 8.0 (clang) optional platform generator Win32 and x64
 
-CMAKE_MINIMUM_REQUIRED( VERSION 3.6.2 )
+CMAKE_MINIMUM_REQUIRED( VERSION 3.6.2...3.11 )
 # VS2019: 3.14.1
 # Intel 2023: 3.22.3 (Win) 3.20 (Linux)
 # VS2022: 3.21
