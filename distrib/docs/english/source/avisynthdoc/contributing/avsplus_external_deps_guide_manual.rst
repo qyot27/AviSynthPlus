@@ -381,8 +381,8 @@ xz-tools
 
         %AVS_DEPS_BUILD_HOME% && ^
         cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps && ^
-        wget http://tukaani.org/xz/xz-5.6.3.tar.gz -O - | tar -xzvf - && ^
-        cd xz-5.6.3 && ^
+        wget http://tukaani.org/xz/xz-5.6.4.tar.gz -O - | tar -xzvf - && ^
+        cd xz-5.6.4 && ^
         mkdir build && ^
         cd build && ^
         mkdir x64 x86
@@ -393,7 +393,7 @@ x86-64
 
     ::
 
-        cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps\xz-5.6.3\build\x64
+        cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps\xz-5.6.4\build\x64
 
     ::
 
@@ -411,7 +411,7 @@ x86-32
 
     ::
 
-        cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps\xz-5.6.3\build\x86
+        cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps\xz-5.6.4\build\x86
 
     ::
 
@@ -465,6 +465,10 @@ x86-64
 
         meson install --strip
 
+    ::
+
+        sudo mklink %AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\lcms2.lib %AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\liblcms2.a
+
 
 x86-32
 ++++++
@@ -490,6 +494,10 @@ x86-32
     ::
 
         meson install --strip
+
+    ::
+
+        sudo mklink %AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\lcms2.lib %AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\liblcms2.a
 
     ::
 
@@ -916,8 +924,8 @@ libmng
 
         %AVS_DEPS_BUILD_HOME% && ^
         cd %AVS_DEPS_BUILD_HOME%\avsplus-build-deps && ^
-        curl -Lo libmng-2.0.3.tar.xz https://sourceforge.net/projects/libmng/files/libmng-devel/2.0.3/libmng-2.0.3.tar.xz/download && ^
-        tar -xJvf libmng-2.0.3.tar.xz && ^
+        curl -Lo libmng-2.0.3.tar.gz https://sourceforge.net/projects/libmng/files/libmng-devel/2.0.3/libmng-2.0.3.tar.gz/download && ^
+        tar -xzvf libmng-2.0.3.tar.gz && ^
         cd libmng-2.0.3/build && ^
         mkdir x64 x86
 
@@ -935,8 +943,7 @@ x86-64
         -DCMAKE_INSTALL_PREFIX=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64 ^
         -DBUILD_SHARED_LIBS:bool=off ^
         -DCMAKE_STAGING_PREFIX=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64 ^
-        -DCMAKE_PREFIX_PATH=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64 ^
-        -DLCMS2_LIBRARY=%AVS_DEPS_BUILD_HOME%\x86-64\lib\liblcms2.a
+        -DCMAKE_PREFIX_PATH=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64
 
     ::
 
@@ -956,8 +963,7 @@ x86-32
         -DCMAKE_INSTALL_PREFIX=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32 ^
         -DBUILD_SHARED_LIBS:bool=off ^
         -DCMAKE_STAGING_PREFIX=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32 ^
-        -DCMAKE_PREFIX_PATH=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32 ^
-        -DLCMS2_LIBRARY=%AVS_DEPS_BUILD_HOME%\x86-32\lib\liblcms2.a
+        -DCMAKE_PREFIX_PATH=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32
 
     ::
 
@@ -1325,7 +1331,7 @@ x86-64
         cmake ../../  -G "Visual Studio 16 2019" -T "v141_xp" ^
         -DCMAKE_INSTALL_PREFIX=%AVS_DEPS_BUILD_HOME%\avisynth_build\x86-64 ^
         -DWINXP_SUPPORT:bool=on ^
-        -DIL_LIBRARIES="%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\DevIL.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\jpeg-static.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\libpng16_static.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\tiff.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\squish.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\jasper.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\zlibstatic.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\liblzma.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\jbig.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\deflatestatic.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\Lerc.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\zstd_static.lib" ^
+        -DIL_LIBRARIES="%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\DevIL.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\jpeg-static.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\libpng16_static.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\tiff.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\squish.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\jasper.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\zlibstatic.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\lzma.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\jbig.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\deflatestatic.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\Lerc.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\zstd_static.lib" ^
         -DILU_LIBRARIES=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64\lib\ILU.lib ^
         -DCMAKE_PREFIX_PATH=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-64 ^
         -DCMAKE_CXX_FLAGS="-DIL_STATIC_LIB"
@@ -1347,7 +1353,7 @@ x86-32
         cmake ../../ -G "Visual Studio 16 2019" -T "v141_xp" -A "Win32" ^
         -DCMAKE_INSTALL_PREFIX=E:/avisynth_build/x86-32 -DMSVC_CPU_ARCH="SSE" ^
         -DWINXP_SUPPORT:bool=on ^
-        -DIL_LIBRARIES="%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\DevIL.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\jpeg-static.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\libpng16_static.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\tiff.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\squish.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\jasper.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\zlibstatic.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\liblzma.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\jbig.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\deflatestatic.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\Lerc.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\zstd_static.lib" ^
+        -DIL_LIBRARIES="%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\DevIL.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\jpeg-static.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\libpng16_static.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\tiff.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\squish.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\jasper.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\zlibstatic.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\lzma.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\jbig.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\deflatestatic.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\Lerc.lib;%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\zstd_static.lib" ^
         -DILU_LIBRARIES=%AVS_DEPS_BUILD_HOME%\avsplus_build_deps\x86-32\lib\ILU.lib ^
         -DCMAKE_PREFIX_PATH="E:\avsplus_build_deps\x86-32" ^
         -DCMAKE_CXX_FLAGS="-DIL_STATIC_LIB"
@@ -1358,4 +1364,4 @@ x86-32
 
 Back to the :doc:`main page <../../index>`
 
-$ Date: 2025-02-08 13:02:29-05:00 $
+$ Date: 2025-03-08 21:34:07-05:00 $
