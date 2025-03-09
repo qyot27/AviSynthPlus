@@ -112,6 +112,14 @@ Setting up meson's cross-files:
         sed -i -e "13ic_args = ['-I/usr/aarch64-w64-mingw32/include']\ncpp_args = ['-I/usr/aarch64-w64-mingw32/include']\nc_link_args = ['-L/usr/aarch64-w64-mingw32/lib']\ncpp_link_args = ['-L/usr/aarch64-w64-mingw32/lib']" \
         share/meson/cross/aarch64-w64-mingw32
 
+Force remove import libraries to prevent accidental shared linking
+(libomp.dll.a remains, because there is no static version of that library):
+
+    ::
+
+        rm aarch64-w64-mingw32/lib/lib{c++,pthread,unwind,winpthread}.dll.a
+
+
 
 Installing the toolchain
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -160,9 +168,9 @@ less cumbersome approach is to just simply symlink the tools into
 
     ::
 
-        sudo ln -s /usr/llvm-mingw/bin/aarch64-w64-mingw32-ranlib /usr/bin/aarch64-w64-mingw32-ranlib && \
+        sudo ln -sf /usr/llvm-mingw/bin/aarch64-w64-mingw32-ranlib /usr/bin/aarch64-w64-mingw32-ranlib && \
         sudo mkdir -p /usr/share/meson/cross && \
-        sudo ln -s /usr/llvm-mingw/share/meson/cross/aarch64-w64-mingw32 /usr/share/meson/cross/aarch64-w64-mingw32
+        sudo ln -sf /usr/llvm-mingw/share/meson/cross/aarch64-w64-mingw32 /usr/share/meson/cross/aarch64-w64-mingw32
 
 
 SoundTouch
@@ -283,12 +291,12 @@ xz-tools
     ::
 
         cd ~/mpv-build-deps && \
-        wget http://tukaani.org/xz/xz-5.6.3.tar.gz -O - | tar -xzvf - && \
-        mkdir -p xz-5.6.3/xz-build/{i686,amd64,aarch64} && \
+        wget http://tukaani.org/xz/xz-5.6.4.tar.gz -O - | tar -xzvf - && \
+        mkdir -p xz-5.6.4/xz-build/{i686,amd64,aarch64} && \
 
     ::
 
-        cd ~/mpv-build-deps/xz-5.6.3/xz-build/aarch64 && \
+        cd ~/mpv-build-deps/xz-5.6.4/xz-build/aarch64 && \
             ../../configure --prefix=/usr/aarch64-w64-mingw32 --disable-shared \
             --disable-nls --enable-silent-rules --host=aarch64-w64-mingw32 && \
         make -j$(nproc) && \
@@ -559,7 +567,7 @@ libsquish
         cd ~/mpv-build-deps/libsquish/libsquish-build/aarch64 && \
             cmake ../../ -G "Ninja" -DCMAKE_INSTALL_PREFIX=/usr/aarch64-w64-mingw32 \
             -DCMAKE_TOOLCHAIN_FILE="/usr/llvm-mingw/aarch64-w64-mingw32/toolchain-aarch64-w64-mingw32.cmake" \
-            -DBUILD_SHARED_LIBS:bool=off && \
+            -DBUILD_SHARED_LIBS:bool=off -DBUILD_SQUISH_WITH_OPENMP:bool=off && \
         ninja && \
             sudo checkinstall --pkgname=libsquish-mingw-aarch64 --pkgversion="$(grep -w \
             "VER =" ../../Makefile | cut -f3 -d ' ')-$(date --rfc-3339=date | \
@@ -660,7 +668,7 @@ ISO-8859-1 to UTF-8 to avoid build errors
             cmake ../../ -G "Ninja" -DCMAKE_INSTALL_PREFIX=/usr/aarch64-w64-mingw32 \
             -DCMAKE_TOOLCHAIN_FILE="/usr/llvm-mingw/aarch64-w64-mingw32/toolchain-aarch64-w64-mingw32.cmake" \
             -DBUILD_SHARED_LIBS:bool=off -DCMAKE_PREFIX_PATH=/usr/aarch64-w64-mingw32 \
-            -DCMAKE_CXX_STANDARD=14 && \
+            -DCMAKE_STAGING_PREFIX=/usr/aarch64-w64-mingw32 -DCMAKE_CXX_STANDARD=14 && \
         ninja && \
             sudo checkinstall --pkgname=devil-mingw-aarch64 --pkgversion="$(git describe --tags | \
             sed 's/^v//')-$(date --rfc-3339=date | sed 's/-//g')-git" --backup=no --deldoc=yes \
@@ -675,7 +683,7 @@ AviSynth+
 
         cd ~/mpv-build-deps && \
         git clone https://github.com/AviSynth/AviSynthPlus && \
-        mkdir -p AviSynthPlus/avisynth-build/{i686,amd64,aarch64} && \
+        mkdir -p AviSynthPlus/avisynth-build/aarch64 && \
 
     ::
 
@@ -688,7 +696,9 @@ AviSynth+
         /usr/aarch64-w64-mingw32/lib/libpng16.a;/usr/aarch64-w64-mingw32/lib/libtiff.a;\
         /usr/aarch64-w64-mingw32/lib/libsquish.a;/usr/aarch64-w64-mingw32/lib/libjasper.a;\
         /usr/aarch64-w64-mingw32/lib/libz.a;/usr/aarch64-w64-mingw32/lib/liblzma.a;\
-        /usr/aarch64-w64-mingw32/lib/libjbig.a;/usr/aarch64-w64-mingw32/lib/libLerc.a" \
+        /usr/aarch64-w64-mingw32/lib/libjbig.a;/usr/aarch64-w64-mingw32/lib/libLerc.a;\
+        /usr/aarch64-w64-mingw32/lib/libzstd.a;/usr/aarch64-w64-mingw32/lib/libdeflate.a;\
+        /usr/llvm-mingw/aarch64-w64-mingw32/lib/libpthread.a" \
             -DILU_LIBRARIES=/usr/aarch64-w64-mingw32/lib/libILU.a && \
         ninja && \
             sudo checkinstall --pkgname=avisynthplus-mingw-aarch64 --pkgversion="$(grep -r \
