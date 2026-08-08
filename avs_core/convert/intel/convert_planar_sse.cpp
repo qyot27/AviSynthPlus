@@ -317,8 +317,8 @@ static void convert_yuv_to_planarrgb_sse2_internal(BYTE* (&dstp)[3], int(&dstPit
         // FIXME: untested, no AviSynth caller yet. Suspect m.y_b/m.y_r should be
         // m.u_b/m.v_r (chroma diagonal), and offset should be chroma_offset_out_for_patch.
         v_patch_G = _mm_set1_epi32(luma_or_rgbin_pivot * m.y_g + offset_out_for_patch);
-        v_patch_B = _mm_set1_epi32(chroma_pivot * m.y_b + offset_out_for_patch);
-        v_patch_R = _mm_set1_epi32(chroma_pivot * m.y_r + offset_out_for_patch);
+        v_patch_B = _mm_set1_epi32(luma_or_rgbin_pivot * m.y_b + chroma_offset_out_for_patch);
+        v_patch_R = _mm_set1_epi32(luma_or_rgbin_pivot * m.y_r + chroma_offset_out_for_patch);
       }
     }
   }
