@@ -512,14 +512,30 @@ static void convert_yuv_to_planarrgb_avx2_internal(BYTE* (&dstp)[3], int(&dstPit
   __m256i half = _mm256_set1_epi16((short)half_pixel_offset);  // 128
   __m256i limit = _mm256_set1_epi16((short)max_pixel_value_target); // 255
 
+  // 13 bit INT_ARITH_SHIFT example:
   // to be able to use it as signed 16 bit in madd; 4096+(16<<13) would not fit into i16
   // multiplier is 4096 instead of 1:
   // original   : 1      * 4096
   // needed     : 1      * (4096 + offset_rgb<<13)  (4096 + 131072 overflows i16)
   // changed to : 4096   * (1 + offset_rgb>>(13-1)
   // Except for exact 16 bit, where we do the output offset_in adjustment along with the 16 bit signed-unsigned pivot fix
-  constexpr int ROUND_SCALE = 1 << (INT_ARITH_SHIFT - 1); // 1 << 12, for 13 bit integer arithmetic: "0.5"
-  const __m256i m256i_round_scale = _mm256_set1_epi16(ROUND_SCALE);
+
+  // Overflow and rounding magnitude considerations.
+  // INT_ARITH_SHIFT is 13,14,15; bit_diff is +/-8; target_shift is INT_ARITH_SHIFT+/-8
+  // Make ROUND_SCALE
+  // - still safely fit in signed 16 bit
+  // - keeping ROUNDER as multiple of ROUND_SCALE
+  // Since ROUNDER is (1 << (target_shift - 1)), we have to limit it only when
+  // ROUNDER/ROUND_SCALE would result in 0
+  // e.g. rgb->Y 8->10 bits: INT_ARITH_SHIFT=15, bit_diff=10-8=2, target_shift=13
+  // ROUNDER is 1<<(target_shift-1)=1<<(13-1)
+  // old code: ROUND_SCALE is 1<<(INT_ARITH_SHIFT-1)=1<<(15-1) 
+  //           ROUNDER/ROUND_SCALE would always be 0, so in madd the multiplication would result in 0.as well
+  // new code (keep minimum of target_shift and INT_ARITH_SHIFT)
+  //           ROUNDER/ROUND_SCALE as a multiplier is now 1 or a small power-of-2
+
+  const int ROUND_SCALE = 1 << ((target_shift < INT_ARITH_SHIFT ? target_shift : INT_ARITH_SHIFT) - 1);
+  const __m256i m256i_round_scale = _mm256_set1_epi16((short)ROUND_SCALE);
 
   int round_mask_plus_offset_out_scaled_i;
   int round_mask_plus_offset_out_chroma_scaled_i;
@@ -548,26 +564,35 @@ static void convert_yuv_to_planarrgb_avx2_internal(BYTE* (&dstp)[3], int(&dstPit
 
   if constexpr (!float_matrix_workflow) {
     // integer preparations for the madd-based main loop
+    // keep madd simple: only handle the rounding (ROUND_SCALE * 1)
+    // offsets are handled later in the patch, after the madd, added to the same place as the optional 16-bit pivot adjustment
+    round_mask_plus_offset_out_scaled_i = ROUNDER / ROUND_SCALE; // 1 or small power-of-2 or 0 (final_is_float)
+    round_mask_plus_offset_out_chroma_scaled_i = ROUNDER / ROUND_SCALE; // 1 or small power-of-2 or 0 (final_is_float)
+
+    // 32-bit post-conversion adds offset in float domain, this is why it's 0 for final_is_float
+    const int offset_out_for_patch = final_is_float ? 0 : (offset_out_scalar << INT_ARITH_SHIFT);
+    const int chroma_offset_out_for_patch = final_is_float ? 0 : (half_pixel_offset << INT_ARITH_SHIFT); // 32-bit post-conversion adds offset in float domain.
+
     if constexpr (lessthan16bit) {
       // 8-14 bit
-      // offset of same magnitude as coeffs, also in simd madd
-      round_mask_plus_offset_out_scaled_i = final_is_float ? 0 : (ROUNDER + (offset_out_scalar << INT_ARITH_SHIFT)) / ROUND_SCALE;
-      round_mask_plus_offset_out_chroma_scaled_i = final_is_float ? 0 : (ROUNDER + (half_pixel_offset << INT_ARITH_SHIFT)) / ROUND_SCALE;
-      v_patch_G = v_patch_B = v_patch_R = _mm256_setzero_si256(); // No patch needed, since the signed 16-bit workaround is not needed.
+      // move ONLY the output offset to the 32-bit patch
+      if constexpr (direction == ConversionDirection::RGB_TO_YUV || direction == ConversionDirection::YUV_TO_YUV) {
+        v_patch_G = _mm256_set1_epi32(offset_out_for_patch);
+        v_patch_B = _mm256_set1_epi32(chroma_offset_out_for_patch);
+        v_patch_R = _mm256_set1_epi32(chroma_offset_out_for_patch);
+      }
+      else {
+        // YUV_TO_RGB, RGB_TO_RGB, RGB_TO_Y: same nonchroma offset
+        v_patch_G = v_patch_B = v_patch_R = _mm256_set1_epi32(offset_out_for_patch);
+      }
     }
     else {
       // exact 16 bit
-      // keep madd simple: only handle the rounding (ROUND_SCALE * 1)
-      // rgb offset is handled later in the patch, after the madd, added to the same place as the pivot adjustment
-      round_mask_plus_offset_out_scaled_i = ROUNDER / ROUND_SCALE; // effectively 1 or 0 (final_is_float)
-      round_mask_plus_offset_out_chroma_scaled_i = ROUNDER / ROUND_SCALE; // effectively 1 or 0 (final_is_float)
 
       // move BOTH the pivot and the output offset to the 32-bit patch
       // Since we have to do the patching anyway, we can combine both adjustments here
       const int luma_or_rgbin_pivot = 32768 + offset_in_scalar;
       const int chroma_pivot = 32768;
-      const int offset_out_for_patch = final_is_float ? 0 : (offset_out_scalar << INT_ARITH_SHIFT); // 32-bit post-conversion adds offset in float domain.
-      const int chroma_offset_out_for_patch = final_is_float ? 0 : (half_pixel_offset << INT_ARITH_SHIFT); // 32-bit post-conversion adds offset in float domain.
 
       if constexpr (direction == ConversionDirection::YUV_TO_RGB) {
         // for YUV->RGB, the pivot adjustment is needed for all three channels since the luma coeffs are not zero, but pivot only the Y

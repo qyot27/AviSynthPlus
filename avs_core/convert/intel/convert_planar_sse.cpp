@@ -223,8 +223,11 @@ static void convert_yuv_to_planarrgb_sse2_internal(BYTE* (&dstp)[3], int(&dstPit
   __m128i half = _mm_set1_epi16((short)half_pixel_offset);
   __m128i limit = _mm_set1_epi16((short)max_pixel_value_target);
 
-  constexpr int ROUND_SCALE = 1 << (INT_ARITH_SHIFT - 1);
-  const __m128i m128i_round_scale = _mm_set1_epi16(ROUND_SCALE);
+  // Overflow and rounding magnitude considerations.
+  // See comments in AVX2 version for details.
+
+  const int ROUND_SCALE = 1 << ((target_shift < INT_ARITH_SHIFT ? target_shift : INT_ARITH_SHIFT) - 1);
+  const __m128i m128i_round_scale = _mm_set1_epi16((short)ROUND_SCALE);
 
   int round_mask_plus_offset_out_scaled_i;
   int round_mask_plus_offset_out_chroma_scaled_i;
@@ -246,18 +249,36 @@ static void convert_yuv_to_planarrgb_sse2_internal(BYTE* (&dstp)[3], int(&dstPit
     offset_in = _mm_setzero_si128();
 
   if constexpr (!float_matrix_workflow) {
+    // integer preparations for the madd-based main loop
+    // keep madd simple: only handle the rounding (ROUND_SCALE * 1)
+    // offsets are handled later in the patch, after the madd, added to the same place as the optional 16-bit pivot adjustment
+    round_mask_plus_offset_out_scaled_i = ROUNDER / ROUND_SCALE;
+    round_mask_plus_offset_out_chroma_scaled_i = ROUNDER / ROUND_SCALE;
+
+    // 32-bit post-conversion adds offset in float domain, this is why it's 0 for final_is_float
+    const int offset_out_for_patch = final_is_float ? 0 : (offset_out_scalar << INT_ARITH_SHIFT);
+    const int chroma_offset_out_for_patch = final_is_float ? 0 : (half_pixel_offset << INT_ARITH_SHIFT);
+
     if constexpr (lessthan16bit) {
-      round_mask_plus_offset_out_scaled_i = final_is_float ? 0 : (ROUNDER + (offset_out_scalar << INT_ARITH_SHIFT)) / ROUND_SCALE;
-      round_mask_plus_offset_out_chroma_scaled_i = final_is_float ? 0 : (ROUNDER + (half_pixel_offset << INT_ARITH_SHIFT)) / ROUND_SCALE;
-      v_patch_G = v_patch_B = v_patch_R = _mm_setzero_si128();
+      // 8-14 bit
+      // move ONLY the output offset to the 32-bit patch
+      if constexpr (direction == ConversionDirection::RGB_TO_YUV || direction == ConversionDirection::YUV_TO_YUV) {
+        v_patch_G = _mm_set1_epi32(offset_out_for_patch);
+        v_patch_B = _mm_set1_epi32(chroma_offset_out_for_patch);
+        v_patch_R = _mm_set1_epi32(chroma_offset_out_for_patch);
+      }
+      else {
+        // YUV_TO_RGB, RGB_TO_RGB, RGB_TO_Y: same nonchroma offset
+        v_patch_G = v_patch_B = v_patch_R = _mm_set1_epi32(offset_out_for_patch);
+      }
     }
     else {
-      round_mask_plus_offset_out_scaled_i = ROUNDER / ROUND_SCALE;
-      round_mask_plus_offset_out_chroma_scaled_i = ROUNDER / ROUND_SCALE;
+      // exact 16 bit
+
+      // move BOTH the pivot and the output offset to the 32-bit patch
+      // Since we have to do the patching anyway, we can combine both adjustments here
       const int luma_or_rgbin_pivot = 32768 + offset_in_scalar;
       const int chroma_pivot = 32768;
-      const int offset_out_for_patch = final_is_float ? 0 : (offset_out_scalar << INT_ARITH_SHIFT);
-      const int chroma_offset_out_for_patch = final_is_float ? 0 : (half_pixel_offset << INT_ARITH_SHIFT);
 
       if constexpr (direction == ConversionDirection::YUV_TO_RGB) {
         v_patch_G = _mm_set1_epi32(luma_or_rgbin_pivot * m.y_g + offset_out_for_patch);
