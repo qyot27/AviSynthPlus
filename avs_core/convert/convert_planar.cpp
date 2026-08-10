@@ -730,6 +730,9 @@ static void convert_yuv_to_planarrgb_c_internal(BYTE* dstp[3], int dstPitch[3], 
         }
 
         // Matrix multiply - coefficient order depends on direction
+        // Note: C is slightly different from Intel SIMD SSE2/AVX2 implementation:
+        // C is using (a+b+c)*scale, SIMD is using a*scale+b*scale+c*scale logic regarding the coeff scaling
+        // and summation. They may not be bit identical here in the float_matrix_workflow (e.g. fullrange destination)
         if constexpr (direction == ConversionDirection::YUV_TO_RGB || direction == ConversionDirection::YUV_TO_YUV) {
           // YUV input: in0=Y, in1=U, in2=V
           out0_f = (m.y_g_f * in0_f + m.u_g_f * in1_f + m.v_g_f * in2_f) * scale_f; // G or Y
