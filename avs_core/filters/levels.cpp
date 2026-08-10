@@ -908,7 +908,7 @@ RGBAdjust::RGBAdjust(PClip _child, double r, double g, double b, double a,
     double rb, double gb, double bb, double ab,
     double rg, double gg, double bg, double ag,
     bool _analyze, bool _dither, bool _conditional, const char *_condVarSuffix, IScriptEnvironment* env)
-    : GenericVideoFilter(_child), analyze(_analyze), dither(_dither), condVarSuffix(_condVarSuffix)
+    : GenericVideoFilter(_child), analyze(_analyze), dither(_dither), conditional(_conditional), condVarSuffix(_condVarSuffix)
 {
     // one buffer for all maps
     map_holder = nullptr;
@@ -1135,7 +1135,8 @@ PVideoFrame __stdcall RGBAdjust::GetFrame(int n, IScriptEnvironment* env)
     local_config.rgba[1].changed = false;
     local_config.rgba[2].changed = false;
     local_config.rgba[3].changed = false;
-    rgbadjust_read_conditional(env, &local_config, condVarSuffix);
+    if (conditional)
+      rgbadjust_read_conditional(env, &local_config, condVarSuffix);
 
     BYTE *maps_live[4] = { nullptr };
     BYTE *maps_local[4] = { nullptr }; // for local lut table allocation, don't overwrite common buffer
@@ -1244,7 +1245,9 @@ PVideoFrame __stdcall RGBAdjust::GetFrame(int n, IScriptEnvironment* env)
       }
     }
 
-    if (use_lut && conditional) {
+    if (use_lut) {
+      // no need to check conditional here, because local LUTs are allocated only if the
+      // conditional changed something.
       for(int i = 0; i<4; i++)
         if (maps_local[i]) delete[] maps_local[i];
     }
