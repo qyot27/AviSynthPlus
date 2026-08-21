@@ -38,11 +38,11 @@
 #include <avisynth.h>
 
 void compare_sse2(uint32_t mask, int increment, const BYTE * f1ptr, int pitch1, const BYTE * f2ptr, int pitch2,
-                         int rowsize, int height, int &SAD_sum, int &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum);
+                         int rowsize, int height, int64_t &SAD_sum, int64_t &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum);
 
 #ifdef X86_32
 void compare_isse(uint32_t mask, int increment, const BYTE * f1ptr, int pitch1, const BYTE * f2ptr, int pitch2,
-                         int rowsize, int height, int &SAD_sum, int &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum);
+                         int rowsize, int height, int64_t &SAD_sum, int64_t &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum);
 #endif
 
 #endif  // __Text_overlay_SSE_H__

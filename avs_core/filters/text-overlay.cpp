@@ -2544,7 +2544,7 @@ static void compare_planar_c(
     const BYTE * f1ptr, int pitch1,
     const BYTE * f2ptr, int pitch2,
     int rowsize, int height,
-    int &SAD_sum, int &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum)
+    int64_t &SAD_sum, int64_t &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum)
 {
     int row_SSD;
 
@@ -2604,7 +2604,7 @@ static void compare_c(uint32_t mask, int increment,
     const BYTE * f1ptr, int pitch1,
     const BYTE * f2ptr, int pitch2,
     int rowsize, int height,
-    int &SAD_sum, int &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum)
+    int64_t &SAD_sum, int64_t &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum)
 {
     int row_SSD;
 
@@ -2671,10 +2671,8 @@ PVideoFrame __stdcall Compare::GetFrame(int n, IScriptEnvironment* env)
   PVideoFrame f1 = child->GetFrame(n, env);
   PVideoFrame f2 = child2->GetFrame(n, env);
 
-  int SD = 0;
-  int64_t SD_64 = 0;
-  int SAD = 0;
-  int64_t SAD_64 = 0;
+  int64_t SD = 0;
+  int64_t SAD = 0;
   int pos_D = 0;
   int neg_D = 0;
   double SSD = 0;
@@ -2716,7 +2714,7 @@ PVideoFrame __stdcall Compare::GetFrame(int n, IScriptEnvironment* env)
         if (pixelsize == 1)
           compare_c(mask, incr, f1ptr, pitch1, f2ptr, pitch2, rowsize, height, SAD, SD, pos_D, neg_D, SSD);
         else
-          compare_uint16_t_c(mask64, incr, f1ptr, pitch1, f2ptr, pitch2, rowsize, height, SAD_64, SD_64, pos_D, neg_D, SSD);
+          compare_uint16_t_c(mask64, incr, f1ptr, pitch1, f2ptr, pitch2, rowsize, height, SAD, SD, pos_D, neg_D, SSD);
       }
   }
   else { // Planar
@@ -2757,14 +2755,14 @@ PVideoFrame __stdcall Compare::GetFrame(int n, IScriptEnvironment* env)
             if (pixelsize == 1)
               compare_planar_c(f1ptr, pitch1, f2ptr, pitch2, rowsize, height, SAD, SD, pos_D, neg_D, SSD);
             else
-              compare_planar_uint16_t_c(f1ptr, pitch1, f2ptr, pitch2, rowsize, height, SAD_64, SD_64, pos_D, neg_D, SSD);
+              compare_planar_uint16_t_c(f1ptr, pitch1, f2ptr, pitch2, rowsize, height, SAD, SD, pos_D, neg_D, SSD);
           }
       }
     }
   }
 
-  double MAD = ((pixelsize==1) ? (double)SAD : (double)SAD_64) / bytecount;
-  double MD = ((pixelsize==1) ? (double)SD : (double)SD_64) / bytecount;
+  double MAD = (double)SAD / bytecount;
+  double MD = (double)SD / bytecount;
   if (SSD == 0.0) SSD = 1.0;
   const int max_pixel_value = (1 << bits_per_pixel) - 1;
   double factor = (double)(max_pixel_value);

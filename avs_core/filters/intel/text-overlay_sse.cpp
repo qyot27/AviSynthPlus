@@ -49,14 +49,17 @@ void compare_sse2(uint32_t mask, int increment,
                          const BYTE * f1ptr, int pitch1,
                          const BYTE * f2ptr, int pitch2,
                          int rowsize, int height,
-                         int &SAD_sum, int &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum)
+                         int64_t &SAD_sum, int64_t &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum)
 {
   // rowsize multiple of 16 for YUV Planar, RGB32 and YUY2; 12 for RGB24
   // increment must be 3 for RGB24 and 4 for others
 
   int64_t issd = 0;
-  __m128i sad_vector = _mm_setzero_si128(); //sum of absolute differences
-  __m128i sd_vector = _mm_setzero_si128(); // sum of differences
+  // using 32 bit partial sums in sad_vector/sd_vector
+  // for large frames (4K) these would overflow for the whole frame
+  // so we flush them per row
+  int64_t isad = 0;
+  int64_t isd = 0;
   __m128i positive_diff = _mm_setzero_si128();
   __m128i negative_diff = _mm_setzero_si128();
   __m128i zero = _mm_setzero_si128();
@@ -74,6 +77,8 @@ void compare_sse2(uint32_t mask, int increment,
 
   for (int y = 0; y < height; ++y) {
     __m128i row_ssd = _mm_setzero_si128();  // sum of squared differences (row_SSD)
+    __m128i sad_vector = _mm_setzero_si128(); //sum of absolute differences
+    __m128i sd_vector = _mm_setzero_si128(); // sum of differences
 
     for (int x = 0; x < rowsize; x+=increment*4) {
       __m128i src1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(f1ptr+x));
@@ -115,12 +120,15 @@ void compare_sse2(uint32_t mask, int increment,
     row_ssd = _mm_add_epi32(row_ssd, tmp);
 
     issd += _mm_cvtsi128_si32(row_ssd);
+
+    isad += _mm_cvtsi128_si32(sad_vector);
+    isad += _mm_cvtsi128_si32(_mm_srli_si128(sad_vector, 8));
+    isd += _mm_cvtsi128_si32(sd_vector);
+    isd += _mm_cvtsi128_si32(_mm_srli_si128(sd_vector, 8));
   }
 
-  SAD_sum += _mm_cvtsi128_si32(sad_vector);
-  SAD_sum += _mm_cvtsi128_si32(_mm_srli_si128(sad_vector, 8));
-  SD_sum  += _mm_cvtsi128_si32(sd_vector);
-  SD_sum += _mm_cvtsi128_si32(_mm_srli_si128(sd_vector, 8));
+  SAD_sum += isad;
+  SD_sum  += isd;
 
   BYTE posdiff_tmp[16];
   BYTE negdiff_tmp[16];
@@ -145,14 +153,16 @@ void compare_isse(uint32_t mask, int increment,
                          const BYTE * f1ptr, int pitch1,
                          const BYTE * f2ptr, int pitch2,
                          int rowsize, int height,
-                         int &SAD_sum, int &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum)
+                         int64_t &SAD_sum, int64_t &SD_sum, int &pos_D,  int &neg_D, double &SSD_sum)
 {
   // rowsize multiple of 8 for YUV Planar, RGB32 and YUY2; 6 for RGB24
   // increment must be 3 for RGB24 and 4 for others
 
   int64_t issd = 0;
-  __m64 sad_vector = _mm_setzero_si64(); //sum of absolute differences
-  __m64 sd_vector = _mm_setzero_si64(); // sum of differences
+  // using 32 bit partial sums in sad_vector/sd_vector
+  // for large frames (4K) these would overflow for the whole frame
+  // so we flush them per row
+  int64_t isad = 0, isd = 0;
   __m64 positive_diff = _mm_setzero_si64();
   __m64 negative_diff = _mm_setzero_si64();
   __m64 zero = _mm_setzero_si64();
@@ -163,6 +173,8 @@ void compare_isse(uint32_t mask, int increment,
 
   for (int y = 0; y < height; ++y) {
     __m64 row_ssd = _mm_setzero_si64();  // sum of squared differences (row_SSD)
+    __m64 sad_vector = _mm_setzero_si64(); //sum of absolute differences
+    __m64 sd_vector = _mm_setzero_si64(); // sum of differences
 
     for (int x = 0; x < rowsize; x+=increment*2) {
       __m64 src1 = *reinterpret_cast<const __m64*>(f1ptr+x);
@@ -202,10 +214,13 @@ void compare_isse(uint32_t mask, int increment,
     row_ssd = _mm_add_pi32(row_ssd, tmp);
 
     issd += _mm_cvtsi64_si32(row_ssd);
+
+    isad += _mm_cvtsi64_si32(sad_vector);
+    isd += _mm_cvtsi64_si32(sd_vector);
   }
 
-  SAD_sum += _mm_cvtsi64_si32(sad_vector);
-  SD_sum  += _mm_cvtsi64_si32(sd_vector);
+  SAD_sum += isad;
+  SD_sum  += isd;
 
   BYTE posdiff_tmp[8];
   BYTE negdiff_tmp[8];
