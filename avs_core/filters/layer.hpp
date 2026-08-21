@@ -72,16 +72,15 @@ static void layer_yuv_mul_c_inner(BYTE* dstp8, const BYTE* ovrp8, const BYTE* ma
       uint32_t target_pixel;
 
       if constexpr (!is_chroma) {
-        // luma: blend towards the "Multiplied" product, no rounding is done here.
-        // Calculate the multiplied product (A*B)/max
-        // SIMD hint:
-        // - on Intel for bits_per_pixel == 16, use _mm_mulhi_epu16 to get the high 16 bits of the 16x16->32 product.
-        //   For lower bit depths, use _mm_mullo_epi16 and shift as needed.
-        //   This means a separate code path for 10-14 and exact 16-bit pixels.
-        // - For universal 10-16 bit support on Intel, widen uint16_t to uint32_t, then
-        //   use _mm_mullo_epi32 for full 32-bit multiplication, then shift right by bits_per_pixel and pack back to uint16_t.
-        // uint32_t case is needed to hint that the product result is also unsigned.
-        const pixel_t prod = (pixel_t)(((uint32_t)ovrp[x] * (uint32_t)dstp[x]) >> bits_per_pixel);
+        // luma: blend towards the "Multiplied" product. No explicit "+half" round-to-nearest
+        // is added here (unlike the alpha blend below). This calculates as floor(A*B/max), not a
+        // round(A*B/max). magic_div_rt (see blend_common.h) divides exactly like a true integer
+        // division by max_pixel_value, unlike the old >> bits_per_pixel shift it replaced.
+        // This keeps the max*max=max rule (e.g. 255*255 -> 255 instead of 254).
+        //
+        // There is currently no SIMD implementation of "Mul" (get_layer_yuv_mul_functions_avx2
+        // in layer_avx2.cpp just includes this scalar path, compiled possibly into a more optimized code).
+        const pixel_t prod = (pixel_t)magic_div_rt<pixel_t>((uint32_t)ovrp[x] * (uint32_t)dstp[x], magic);
         target_pixel = prod;
         // was: dstp[x] = (pixel_t)(dstp[x] + ((((((calc_t)ovrp[x] * dstp[x]) >> bits_per_pixel) - dstp[x]) * alpha_mask) >> bits_per_pixel));
       }
@@ -1346,10 +1345,11 @@ static void layer_planarrgb_mul_c(BYTE** dstp8, const BYTE** ovrp8, const BYTE* 
       const uint32_t inv_alpha = max_pixel_value - alpha_eff;
 
       if constexpr (chroma) {
-        // Calculate the multiplied product (A*B)/max
-        const pixel_t prod_r = (pixel_t)(((uint32_t)ovrp_r[x] * (uint32_t)dstp_r[x]) >> bits_per_pixel);
-        const pixel_t prod_g = (pixel_t)(((uint32_t)ovrp_g[x] * (uint32_t)dstp_g[x]) >> bits_per_pixel);
-        const pixel_t prod_b = (pixel_t)(((uint32_t)ovrp_b[x] * (uint32_t)dstp_b[x]) >> bits_per_pixel);
+        // Calculate the multiplied product (A*B)/max_pixel_value
+        // Use the MagicDiv instead of bit-shift to keep max*max=max.
+        const pixel_t prod_r = (pixel_t)magic_div_rt<pixel_t>((uint32_t)ovrp_r[x] * (uint32_t)dstp_r[x], magic);
+        const pixel_t prod_g = (pixel_t)magic_div_rt<pixel_t>((uint32_t)ovrp_g[x] * (uint32_t)dstp_g[x], magic);
+        const pixel_t prod_b = (pixel_t)magic_div_rt<pixel_t>((uint32_t)ovrp_b[x] * (uint32_t)dstp_b[x], magic);
 
         dstp_r[x] = (pixel_t)magic_div_rt<pixel_t>((uint32_t)dstp_r[x] * inv_alpha + (uint32_t)prod_r * alpha_eff + half, magic);
         dstp_g[x] = (pixel_t)magic_div_rt<pixel_t>((uint32_t)dstp_g[x] * inv_alpha + (uint32_t)prod_g * alpha_eff + half, magic);
@@ -1359,9 +1359,9 @@ static void layer_planarrgb_mul_c(BYTE** dstp8, const BYTE** ovrp8, const BYTE* 
         // use luma instead of overlay
         const int luma = (cyb * ovrp_b[x] + cyg * ovrp_g[x] + cyr * ovrp_r[x]) >> 15;
 
-        const pixel_t prod_r = (pixel_t)(((uint32_t)luma * (uint32_t)dstp_r[x]) >> bits_per_pixel);
-        const pixel_t prod_g = (pixel_t)(((uint32_t)luma * (uint32_t)dstp_g[x]) >> bits_per_pixel);
-        const pixel_t prod_b = (pixel_t)(((uint32_t)luma * (uint32_t)dstp_b[x]) >> bits_per_pixel);
+        const pixel_t prod_r = (pixel_t)magic_div_rt<pixel_t>((uint32_t)luma * (uint32_t)dstp_r[x], magic);
+        const pixel_t prod_g = (pixel_t)magic_div_rt<pixel_t>((uint32_t)luma * (uint32_t)dstp_g[x], magic);
+        const pixel_t prod_b = (pixel_t)magic_div_rt<pixel_t>((uint32_t)luma * (uint32_t)dstp_b[x], magic);
 
         dstp_r[x] = (pixel_t)magic_div_rt<pixel_t>((uint32_t)dstp_r[x] * inv_alpha + (uint32_t)prod_r * alpha_eff + half, magic);
         dstp_g[x] = (pixel_t)magic_div_rt<pixel_t>((uint32_t)dstp_g[x] * inv_alpha + (uint32_t)prod_g * alpha_eff + half, magic);
@@ -1369,7 +1369,7 @@ static void layer_planarrgb_mul_c(BYTE** dstp8, const BYTE** ovrp8, const BYTE* 
       }
 
       if constexpr (blend_alpha) {
-        const pixel_t prod_a = (pixel_t)(((uint32_t)alpha_target[x] * (uint32_t)dstp_a[x]) >> bits_per_pixel);
+        const pixel_t prod_a = (pixel_t)magic_div_rt<pixel_t>((uint32_t)alpha_target[x] * (uint32_t)dstp_a[x], magic);
         dstp_a[x] = (pixel_t)magic_div_rt<pixel_t>((uint32_t)dstp_a[x] * inv_alpha + (uint32_t)prod_a * alpha_eff + half, magic);
       }
     }
