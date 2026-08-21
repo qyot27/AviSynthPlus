@@ -2416,6 +2416,7 @@ Compare::Compare(PClip _child1, PClip _child2, const char* channels, const char 
 
   planar_plane = 0;
   mask = 0;
+  mask64 = 0;
   const size_t length = strlen(channels);
   for (size_t i = 0; i < length; i++) {
     if (vi.IsRGB() && !vi.IsPlanar()) {
