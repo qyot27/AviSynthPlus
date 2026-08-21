@@ -4459,15 +4459,17 @@ public:
 
   // Load from source with relative offset
   template<typename T>
-  void loadRelSource(const T* src, int x, int dx, int dy, int width, int height, int stride) {
+  void loadRelSource(const T* src, int x, int y, int dx, int dy, int width, int height, int stride) {
     auto& current_stack = stack[stackIndex];
     for (int i = 0; i < VectorSize; ++i)
       current_stack[i] = stacktop[i];
-    // At edges: repeat, no mirror
-    int newY = std::max(0, std::min(dy, height - 1));
+    // at the edges repeat, no mirror
+    // stride is of byte pitch
+    int newY = std::max(0, std::min(y + dy, height - 1)) - y;
+    const uint8_t* rowPtr = reinterpret_cast<const uint8_t*>(src) + static_cast<intptr_t>(newY) * stride;
     for (int i = 0; i < VectorSize; ++i) {
       int newX = std::max(0, std::min(x + dx + i, width - 1));
-      stacktop[i] = static_cast<float>(reinterpret_cast<const T*>((uint8_t*)&src[newY * stride])[newX]);
+      stacktop[i] = static_cast<float>(reinterpret_cast<const T*>(rowPtr)[newX]);
     }
     stackIndex++;
   }
@@ -4812,13 +4814,13 @@ public:
         loadSource<float>(reinterpret_cast<const float*>(srcp[vops_current->e.ival]), x);
         break;
       case opLoadRelSrc8:
-        loadRelSource<uint8_t>(reinterpret_cast<const uint8_t*>(srcp[vops_current->e.ival]), x, vops_current->dx, vops_current->dy, w, h, src_stride[vops_current->e.ival]);
+        loadRelSource<uint8_t>(reinterpret_cast<const uint8_t*>(srcp[vops_current->e.ival]), x, y, vops_current->dx, vops_current->dy, w, h, src_stride[vops_current->e.ival]);
         break;
       case opLoadRelSrc16:
-        loadRelSource<uint16_t>(reinterpret_cast<const uint16_t*>(srcp[vops_current->e.ival]), x, vops_current->dx, vops_current->dy, w, h, src_stride[vops_current->e.ival]);
+        loadRelSource<uint16_t>(reinterpret_cast<const uint16_t*>(srcp[vops_current->e.ival]), x, y, vops_current->dx, vops_current->dy, w, h, src_stride[vops_current->e.ival]);
         break;
       case opLoadRelSrcF32:
-        loadRelSource<float>(reinterpret_cast<const float*>(srcp[vops_current->e.ival]), x, vops_current->dx, vops_current->dy, w, h, src_stride[vops_current->e.ival]);
+        loadRelSource<float>(reinterpret_cast<const float*>(srcp[vops_current->e.ival]), x, y, vops_current->dx, vops_current->dy, w, h, src_stride[vops_current->e.ival]);
         break;
       case opLoadConst:
         push_and_broadcast(vops_current->e.fval);
