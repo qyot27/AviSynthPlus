@@ -1464,7 +1464,28 @@ AVSValue __cdecl ConvertBits::Create(AVSValue args, void* user_data, IScriptEnvi
     clip = env->Invoke("ConvertToYV16", AVSValue(new_args, 1)).AsClip();
   }
 
+  // For large gaps originated from a larger dither_bits, we created an intermediate clip,
+  // because the algorithm can handle only a maximum of 8 bits difference.
+  // In the callee get_convert_any_bits_functions only selects a dither implementation when
+  // target_bitdepth <= source_bitdepth ("dither is only down"). The automatic
+  // preconversion would result in a (possibly) reduced source_bitdepth that has been
+  // changed above, and is _lower_ than the still original target_bitdepth.
+  // Case: 16->16 with dither_bits=1 gets preconverted to an 8-bit intermediate, but still
+  // has to reach 16-bit output. So we do dither in-place at source_bitdepth first, then simply expand
+  // it back up.
+  const bool need_expand_back_after_dither = (dither_type >= 0 && target_bitdepth > source_bitdepth);
+  const int final_target_bitdepth = target_bitdepth;
+  if (need_expand_back_after_dither)
+    target_bitdepth = source_bitdepth; // temporarily change in order to do the dithering effectively
+
   AVSValue result = new ConvertBits(clip, dither_type, target_bitdepth, assume_truerange, ColorRange_src, ColorRange_dest, dither_bitdepth, env);
+
+  if (need_expand_back_after_dither) {
+    // scale back w/o dithering
+    AVSValue new_args[7] = { result, final_target_bitdepth, true, -1 /* no dither */, AVSValue() /*dither_bits*/, fulld, fulld };
+    result = env->Invoke("ConvertBits", AVSValue(new_args, 7)).AsClip();
+    target_bitdepth = final_target_bitdepth; // back to the originally requested bit-depth
+  }
 
   // convert back to packed rgb from planar on the fly
   if (need_convert_24 || need_convert_48) {
