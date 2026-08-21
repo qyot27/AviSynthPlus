@@ -343,7 +343,7 @@ PVideoFrame __stdcall ConvertRGBToYUV444::GetFrame(int n, IScriptEnvironment* en
     }
     else {
       // fill default transparency
-      switch (target_bit_depth)
+      switch (vi.ComponentSize())
       {
       case 1:
         fill_plane<BYTE>(dstpA, heightA, rowsizeA, dst_pitchA, 255);
@@ -1112,7 +1112,7 @@ PVideoFrame __stdcall ConvertYUV444ToRGB::GetFrame(int n, IScriptEnvironment* en
       }
       else {
         // fill default transparency
-        switch (target_bit_depth)
+        switch (vi.ComponentSize())
         {
         case 1:
           fill_plane<BYTE>(dstpA, heightA, rowsizeA, dst_pitchA, 255);
