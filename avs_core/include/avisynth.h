@@ -739,13 +739,15 @@ struct VideoInfo {
     CS_GENERIC_YUVA440 = CS_PLANAR | CS_YUVA | CS_VPlaneFirst | CS_Sub_Width_1 | CS_Sub_Height_2, // 4:4:0:A planar, 2026-07-29
     CS_GENERIC_YUV411  = CS_PLANAR | CS_YUV  | CS_VPlaneFirst | CS_Sub_Width_4 | CS_Sub_Height_1, // 4:1:1 planar
     CS_GENERIC_YUVA411 = CS_PLANAR | CS_YUVA | CS_VPlaneFirst | CS_Sub_Width_4 | CS_Sub_Height_1, // 4:1:1:A planar
+    CS_GENERIC_YUV410  = CS_PLANAR | CS_YUV  | CS_VPlaneFirst | CS_Sub_Width_4 | CS_Sub_Height_4, // 4:1:0 planar
+    CS_GENERIC_YUVA410 = CS_PLANAR | CS_YUVA | CS_VPlaneFirst | CS_Sub_Width_4 | CS_Sub_Height_4, // 4:1:0:A planar
 
     CS_YV24  = CS_GENERIC_YUV444 | CS_Sample_Bits_8,  // YVU 4:4:4 planar
     CS_YV16  = CS_GENERIC_YUV422 | CS_Sample_Bits_8,  // YVU 4:2:2 planar
     CS_YV12  = CS_GENERIC_YUV420 | CS_Sample_Bits_8,  // YVU 4:2:0 planar
     CS_I420  = CS_PLANAR | CS_YUV | CS_Sample_Bits_8 | CS_UPlaneFirst | CS_Sub_Width_2 | CS_Sub_Height_2,  // YUV 4:2:0 planar
     CS_IYUV  = CS_I420,
-    CS_YUV9  = CS_PLANAR | CS_YUV | CS_Sample_Bits_8 | CS_VPlaneFirst | CS_Sub_Width_4 | CS_Sub_Height_4,  // YUV 4:1:0 planar
+    CS_YUV9  = CS_GENERIC_YUV410 | CS_Sample_Bits_8,  // YUV 4:1:0 planar
     CS_YV411 = CS_GENERIC_YUV411 | CS_Sample_Bits_8,  // YUV 4:1:1 planar
 
     CS_Y8    = CS_GENERIC_Y | CS_Sample_Bits_8,                                                            // Y   4:0:0 planar
@@ -855,7 +857,22 @@ struct VideoInfo {
     CS_YUVA411P12 = CS_GENERIC_YUVA411 | CS_Sample_Bits_12, // YUVA 4:1:1 12bit samples
     CS_YUVA411P14 = CS_GENERIC_YUVA411 | CS_Sample_Bits_14, // YUVA 4:1:1 14bit samples
     CS_YUVA411P16 = CS_GENERIC_YUVA411 | CS_Sample_Bits_16, // YUVA 4:1:1 16bit samples
-    CS_YUVA411PS  = CS_GENERIC_YUVA411 | CS_Sample_Bits_32  // YUVA 4:1:1 32bit samples
+    CS_YUVA411PS  = CS_GENERIC_YUVA411 | CS_Sample_Bits_32, // YUVA 4:1:1 32bit samples
+
+    // Planar YUV(A) 4:1:0, 2026-08-25
+    CS_YUV410     = CS_YUV9,  // YUV 4:1:0 8bit samples
+    CS_YUV410P10  = CS_GENERIC_YUV410 | CS_Sample_Bits_10, // YUV 4:1:0 10bit samples
+    CS_YUV410P12  = CS_GENERIC_YUV410 | CS_Sample_Bits_12, // YUV 4:1:0 12bit samples
+    CS_YUV410P14  = CS_GENERIC_YUV410 | CS_Sample_Bits_14, // YUV 4:1:0 14bit samples
+    CS_YUV410P16  = CS_GENERIC_YUV410 | CS_Sample_Bits_16, // YUV 4:1:0 16bit samples
+    CS_YUV410PS   = CS_GENERIC_YUV410 | CS_Sample_Bits_32, // YUV 4:1:0 32bit samples
+
+    CS_YUVA410    = CS_GENERIC_YUVA410 | CS_Sample_Bits_8,  // YUVA 4:1:0 8bit samples
+    CS_YUVA410P10 = CS_GENERIC_YUVA410 | CS_Sample_Bits_10, // YUVA 4:1:0 10bit samples
+    CS_YUVA410P12 = CS_GENERIC_YUVA410 | CS_Sample_Bits_12, // YUVA 4:1:0 12bit samples
+    CS_YUVA410P14 = CS_GENERIC_YUVA410 | CS_Sample_Bits_14, // YUVA 4:1:0 14bit samples
+    CS_YUVA410P16 = CS_GENERIC_YUVA410 | CS_Sample_Bits_16, // YUVA 4:1:0 16bit samples
+    CS_YUVA410PS  = CS_GENERIC_YUVA410 | CS_Sample_Bits_32  // YUVA 4:1:0 32bit samples
   };
 
   int pixel_type;                // changed to int as of 2.5

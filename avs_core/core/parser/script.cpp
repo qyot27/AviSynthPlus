@@ -1617,6 +1617,19 @@ static const std::map<int, std::string> pixel_format_table =
   {VideoInfo::CS_YUVA411P14 , "YUVA411P14"},
   {VideoInfo::CS_YUVA411P16 , "YUVA411P16"},
   {VideoInfo::CS_YUVA411PS  , "YUVA411PS"},
+
+  {VideoInfo::CS_YUV410    , "YUV9"},
+  {VideoInfo::CS_YUV410P10 , "YUV410P10"},
+  {VideoInfo::CS_YUV410P12 , "YUV410P12"},
+  {VideoInfo::CS_YUV410P14 , "YUV410P14"},
+  {VideoInfo::CS_YUV410P16 , "YUV410P16"},
+  {VideoInfo::CS_YUV410PS  , "YUV410PS"},
+
+  {VideoInfo::CS_YUVA410P10 , "YUVA410P10"},
+  {VideoInfo::CS_YUVA410P12 , "YUVA410P12"},
+  {VideoInfo::CS_YUVA410P14 , "YUVA410P14"},
+  {VideoInfo::CS_YUVA410P16 , "YUVA410P16"},
+  {VideoInfo::CS_YUVA410PS  , "YUVA410PS"}
 };
 
 static const std::multimap<int, std::string> pixel_format_table_ex =
@@ -1638,6 +1651,8 @@ static const std::multimap<int, std::string> pixel_format_table_ex =
   {VideoInfo::CS_YUVA440, "YUVA440P8"},
   {VideoInfo::CS_YV411  , "YUV411P8"},
   {VideoInfo::CS_YUVA411, "YUVA411P8"},
+  {VideoInfo::CS_YUV410,  "YUV410P8"},
+  {VideoInfo::CS_YUVA410, "YUVA410P8"}
 };
 
 const char *GetPixelTypeName(const int pixel_type)
