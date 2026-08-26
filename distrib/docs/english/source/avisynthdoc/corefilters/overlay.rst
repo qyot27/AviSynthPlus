@@ -62,9 +62,18 @@ Syntax and Parameters
     overridden with ``greymask``=``false``. 
 
     There is no default, but not specifying is equivalent to supplying a fully
-    255 (in general ``2^bit_depth - 1``  for 8-16 bit formats or ``1.0`` for 
+    255 (in general ``2^bit_depth - 1``  for 8-16 bit formats or ``1.0`` for
     32 bit float format) clip. Maximum pixel value means a 1.0 mask multiplier,
     that means full opacity.
+
+    Internally each mask pixel is treated as the fraction ``mask_value /
+    max_pixel_value`` (255 for 8-bit, up to 65535 for 16-bit, or the value
+    itself for 32-bit float). For integer formats the two ends are exact:
+    ``mask=0`` reproduces ``base`` untouched, ``mask=max`` reproduces ``overlay``
+    exactly, identical to omitting the mask. Note: since ``max_pixel_value`` is
+    always odd, no integer value strictly between them is an exact half, so
+    e.g. ``mask=127`` or ``128`` (8-bit) are only the closest approximation to
+    50%. Use 32-bit float input for exact fractional mask values.
 
 .. describe:: opacity
 
@@ -72,8 +81,17 @@ Syntax and Parameters
     1.0, where 0.0 is transparent and 1.0 is fully opaque (if no mask is used).
     When used together with a mask this value is multiplied by the mask value to
     form the **final** opacity.
-    
+
     Default: 1.0
+
+    Since v3.7.6, ``opacity`` is scaled internally the same way as ``mask``,
+    as a fraction of ``max_pixel_value``, instead of the fixed 0..256 range
+    used before. This gives it the same fine granularity as ``mask`` at higher
+    bit depths (e.g. 65536 steps at 16-bit) rather than a flat 257 steps
+    regardless of bit depth. The endpoint exactness and the no-exact-half behavior
+    described above for ``mask`` applies to ``opacity`` too, and to their
+    combination when both are used together: a fully opaque mask always
+    reproduces the ``opacity``-only result.
 
 .. describe:: mode
 
@@ -147,9 +165,13 @@ Syntax and Parameters
 |           |                                                       | with luma=128 instead of 126. If you want the pure difference, use                                    |
 |           |                                                       | mode="Subtract" or add `ColorYUV(off_y=-128)`.                                                        |
 +-----------+-------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
-| Exclusion |  .. image:: ./pictures/Overlay-example-exclusion.png  | This will invert the image based on the luminosity of the overlay                                     |
-|           |                                                       | image. Blending with white inverts the base color values; blending with black                         |
-|           |                                                       | produces no change.                                                                                   |
+| Exclusion |  .. image:: ./pictures/Overlay-example-exclusion.png  | This will invert the image based on the luminosity of the overlay image. Blending with white inverts  |
+|           |                                                       | the base color values; blending with black produces no change. Internally this uses a bitwise XOR     |
+|           |                                                       | against the maximum pixel value, which is exact only for full-scale luma; limited (TV) range luma is  |
+|           |                                                       | not inverted correctly (limited range is not supported by :doc:`Invert <invert>` either). The XOR is  |
+|           |                                                       | also not color-correct for U/V (which are inherently shifted, signed quantities): neutral chroma      |
+|           |                                                       | midpoint (128 for 8-bit) is not preserved, becoming 127. Treat the chroma result as an artistic side  |
+|           |                                                       | effect, not a rigorous color computation.                                                             |
 +-----------+-------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
 
 .. describe:: greymask
@@ -552,13 +574,17 @@ Test script for different bit depths with and without masks
 +-----------+------------------------------------------------------------------------+
 | Changelog |                                                                        |
 +===========+========================================================================+
-| 3.7.6     | | "add", and "subtract" supports 32-bit float input.                   |
+| 3.7.6     | | "add" and "subtract" support 32-bit float input.                     |
 |           | | "add" and "subtract" support RGB input without 4:4:4 conversion.     |
 |           | | Check for unsupported 32-bit float, such modes give error.           |
 |           | | Add ``placement`` parameter ("mpeg2" default, "mpeg1", or            |
 |           |   "top_left").                                                         |
 |           | | Relevant for conversionless mode (``use444=false``) with subsampled  |
 |           |   YUV and greymask.                                                    |
+|           | | Fix: masked "add"/"subtract"/"darken"/"lighten"/"difference"/        |
+|           |   "exclusion"/"softlight"/"hardlight" now match the unmasked result    |
+|           |   exactly at mask=0/max, restoring the guarantee already established   |
+|           |   for "blend" (r2502).                                                 |
 +-----------+------------------------------------------------------------------------+
 | 3.7.2     | Address issue #255: "blend": now using accurate formula using float    |
 |           | calculation internally.                                                |
@@ -590,6 +616,6 @@ Test script for different bit depths with and without masks
 | v2.54     | Initial Release                                                        |
 +-----------+------------------------------------------------------------------------+
 
-$Date: 2026/04/22 11:12:00 $
+$Date: 2026/08/26 15:53:00 $
 
 .. _here: http://forum.doom9.org/showthread.php?s=&threadid=28438

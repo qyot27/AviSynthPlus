@@ -110,9 +110,18 @@ Changelog
 +-----------------+-------------------------------------------------------------+
 | Version         | Changes                                                     |
 +=================+=============================================================+
-| AviSynth+ 3.7.6 | Add ``gdi`` parameter to select between Windows GDI         |
-|                 | antialiased rendering (slow, high quality) and the built-in |
-|                 | bitmap font (fast, cross-platform).                         |
+| AviSynth+ 3.7.6 || Add ``gdi`` parameter to select between Windows GDI        |
+|                 |  antialiased rendering (slow, high quality) and the built-in|
+|                 |  bitmap font (fast, cross-platform).                        |
+|                 || Fix: 8-bit SAD/SD accumulators now use 64-bit accumulators,|
+|                 |  preventing overflow on large frames (e.g. 4K) matching the |
+|                 |  64-bit accumulators already used for 10-16 bit formats.    |
+|                 || Fix: RGB24/RGB48 MAD/MD denominator divided by a hardcoded |
+|                 |  4 (assumed channels/pixel) instead of 3 giving wrong       |
+|                 |  statistics for these formats.                              |
+|                 || Fix: uninitialized internal mask for RGB48/RGB64 could     |
+|                 |  give non-deterministic/wrong MAD/MD depending on channel   |
+|                 |  selection and process memory state.                        |
 +-----------------+-------------------------------------------------------------+
 | AviSynth+ 3.7.2 || Fix: ``channels`` now defaults to "Y" instead of "YUV" for |
 |                 |  greyscale input.                                           |
@@ -124,7 +133,7 @@ Changelog
 | AviSynth 2.5.8  | YV12 support.                                               |
 +-----------------+-------------------------------------------------------------+
 
-$Date: 2022/02/18 19:42:53 $
+$Date: 2026/08/22 07:32:00 $
 
 .. _[1]:
     https://en.wikipedia.org/wiki/Statistical_dispersion

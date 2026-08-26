@@ -132,6 +132,7 @@ Additions, changes
     instead: faster, cross-platform compatible, and the only option on non-Windows builds.
   * ``font`` default is now ``gdi``-dependent: "Arial" / "Courier New" for GDI, "Terminus" otherwise.
   * ``bold`` default is now ``gdi``-dependent: ``true`` for GDI, ``false`` for the bitmap font path.
+
   See :doc:`showframes <./corefilters/showframes>`, :doc:`info <./corefilters/info>`, and :doc:`compare <./corefilters/compare>`.
 
 - ``ShowCRC32``: add ``channels``, ``mode``, and ``showmode`` parameters.
@@ -147,6 +148,7 @@ Additions, changes
   * For packed formats (YUY2, RGB24/32/48/64) with default parameters the raw interleaved buffer
     is hashed directly, preserving backward compatibility.
   * Planar RGB(A): planes are always processed in R, G, B, A logical order.
+
   See :doc:`showframes <./corefilters/showframes>`.
 - "Layer": add ``"top_left"`` option for the ``"placement"`` parameter — HEVC/AV1 left+top co-sited
   chroma (point-sample, fastest).  Affects ``"mul"``, ``"add"``, ``"subtract"``, ``"lighten"``,
@@ -312,6 +314,24 @@ Bugfixes
     when the overlay position is not chroma-grid-aligned.  A ceiling formula replaces the old
     floor division, which caused the rightmost column or bottom row of affected chroma pixels
     to be skipped.
+- Fix #505: "Expr" Vector-C relative-row addressing (``x[dx,dy]``) ignored the current row
+  entirely, and additionally mis-scaled the row byte offset for 16-bit/float sources.
+- Fix #506: "Compare" 32-bit SAD/SD accumulators (8-bit packed/planar, C and SSE2/ISSE paths)
+  could overflow on large frames (e.g. 4K RGB32); now 64-bit unconditionally.
+- Fix #507: "Compare" RGB24/RGB48 MAD/MD denominator divided by a hardcoded 4 (assumed
+  4 channels/pixel) instead of the actual per-pixel component count (3).
+- Fix #508: "Compare" uninitialized internal mask could give non-deterministic MAD/MD
+  results for RGB48/RGB64.
+- Fix #509: "ConvertBits" automatic preconversion for large ``dither_bits`` gaps (e.g.
+  16-bit source with ``dither_bits=1``) silently dropped the dithering, falling back to
+  a plain bit-depth expansion.
+- Fix #510: "Layer" "Mul" raw multiply product was rounded down incorrectly, so
+  near-max products came out one unit too low (e.g. 255*255 -> 254).
+- Fix #511: "ConvertYUV444ToRGB"/"ConvertRGBToYUV444" left the synthesized alpha plane
+  uninitialized when converting an alpha-less source to an alpha-carrying target.
+- Fix #512: "Overlay" masked "add"/"subtract"/"darken"/"lighten"/"difference"/"exclusion"/
+  "softlight"/"hardlight" a fully-opaque mask did not reproduce the same result as omitting the mask.
+  As a side effect, also added finer opacity-granularity over 8 bits at integer formats.
 
 
 Optimizations
