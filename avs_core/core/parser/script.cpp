@@ -367,6 +367,12 @@ extern const AVSFunction Script_functions[] = {
   /*
   { "IsArrayOf", BUILTIN_FUNC_PREFIX, ".s", IsArrayOf },
   */
+
+  { "Is440",  BUILTIN_FUNC_PREFIX, "c", Is440 },
+  { "IsYA",   BUILTIN_FUNC_PREFIX, "c", IsYA },
+  { "Is410",  BUILTIN_FUNC_PREFIX, "c", Is410 },
+  { "Is411",  BUILTIN_FUNC_PREFIX, "c", Is411 },
+
   { 0 }
 };
 
@@ -3066,3 +3072,7 @@ AVSValue ArraySort(AVSValue args, void* user_data, IScriptEnvironment* env)
   return AVSValue(new_val.data(), size);
 }
 
+AVSValue Is440(AVSValue args, void*, IScriptEnvironment*) {  return VI(args[0]).Is440(); }
+AVSValue IsYA(AVSValue args, void*, IScriptEnvironment*)  {  return VI(args[0]).IsYA(); }
+AVSValue Is410(AVSValue args, void*, IScriptEnvironment*) {  return VI(args[0]).IsY410(); }
+AVSValue Is411(AVSValue args, void*, IScriptEnvironment*) {  return VI(args[0]).Is411(); }

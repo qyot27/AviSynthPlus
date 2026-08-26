@@ -480,6 +480,12 @@ struct AVS_Linkage {
   void          (VideoInfo::* SetChannelMask)(bool isChannelMaskKnown, unsigned int dwChannelMask);
   unsigned int  (VideoInfo::* GetChannelMask)() const;
 
+  // V13
+  bool          (VideoInfo::*Is440)() const;
+  bool          (VideoInfo::*IsYA)() const;
+  bool          (VideoInfo::*Is410)() const;
+  bool          (VideoInfo::*Is411)() const;
+
   /**********************************************************************/
   // Reserve pointer space for Avisynth+
   void          (VideoInfo::* reserved2[64 - 31])();
@@ -1053,6 +1059,12 @@ struct VideoInfo {
   bool IsChannelMaskKnown() const AVS_BakedCode(return AVS_LinkCallOptDefault(IsChannelMaskKnown, false) )
   void SetChannelMask(bool isChannelMaskKnown, unsigned int dwChannelMask) AVS_BakedCode(AVS_LinkCall_Void(SetChannelMask)(isChannelMaskKnown, dwChannelMask))
   unsigned int GetChannelMask() const AVS_BakedCode(return AVS_LinkCallOptDefault(GetChannelMask, 0) )
+
+  // v13
+  bool Is440() const AVS_BakedCode( return AVS_LinkCallOptDefault(Is440, false) )
+  bool IsYA() const AVS_BakedCode( return AVS_LinkCallOpt(IsYA, IsYA8) )
+  bool Is410() const AVS_BakedCode( return AVS_LinkCallOptDefault(Is410, false) )
+  bool Is411() const AVS_BakedCode( return AVS_LinkCallOpt(Is410, IsYV411) )
 
 }; // end struct VideoInfo
 
