@@ -96,28 +96,43 @@ void OL_DarkenImage::BlendImageMask(ImageOverlayInternal* base, ImageOverlayInte
   pixel_t* ovU = reinterpret_cast<pixel_t *>(overlay->GetPtr(PLANAR_U));
   pixel_t* ovV = reinterpret_cast<pixel_t *>(overlay->GetPtr(PLANAR_V));
 
-  pixel_t* maskY = maskMode ? reinterpret_cast<pixel_t *>(mask->GetPtr(PLANAR_Y)) : nullptr;
-  pixel_t* maskU = maskMode ? reinterpret_cast<pixel_t *>(mask->GetPtr(PLANAR_U)) : nullptr;
-  pixel_t* maskV = maskMode ? reinterpret_cast<pixel_t *>(mask->GetPtr(PLANAR_V)) : nullptr;
+  pixel_t* maskY;
+  pixel_t* maskU;
+  pixel_t* maskV;
+  if constexpr (maskMode) {
+    maskY = reinterpret_cast<pixel_t *>(mask->GetPtr(PLANAR_Y));
+    maskU = reinterpret_cast<pixel_t *>(mask->GetPtr(PLANAR_U));
+    maskV = reinterpret_cast<pixel_t *>(mask->GetPtr(PLANAR_V));
+  } else {
+    maskY = nullptr;
+    maskU = nullptr;
+    maskV = nullptr;
+  }
 
   const int half_pixel_value = (sizeof(pixel_t) == 1) ? 128 : (1 << (bits_per_pixel - 1));
   const int max_pixel_value = (sizeof(pixel_t) == 1) ? 255 : (1 << bits_per_pixel) - 1;
-  const int pixel_range = max_pixel_value + 1;
-  const int MASK_CORR_SHIFT = (sizeof(pixel_t) == 1) ? 8 : bits_per_pixel;
-  const int OPACITY_SHIFT  = 8; // opacity always max 0..256
   const int basepitch = (base->pitch) / sizeof(pixel_t);
   const int overlaypitch = (overlay->pitch) / sizeof(pixel_t);
-  const int maskpitch = maskMode ? (mask->pitch) / sizeof(pixel_t) : 0;
+  int maskpitch;
+  if constexpr (maskMode) {
+    maskpitch = (mask->pitch) / sizeof(pixel_t);
+  } else {
+    maskpitch = 0;
+  }
 
-  // avoid "uint16*uint16 can't get into int32" overflows
-  using result_t = typename std::conditional<sizeof(pixel_t) == 1, int, int64_t>::type;
+  const MagicDiv magic = get_magic_div(bits_per_pixel);
+
+  // eff on the max_pixel_value scale; only used in the opacity_f!=1.0f branch below.
+  // Finer opacity granularity at >8-bit than the old fixed 0..256 scale.
+  const int opacity_i = (int)(opacity_f * max_pixel_value + 0.5f);
+  const int rounder = max_pixel_value / 2;
 
   int w = base->w();
   int h = base->h();
-  if (opacity == 256) {
+  if (opacity_f == 1.0f) {
     // full opacity - optimize
     if constexpr (maskMode) {
-      // opacity == 256 && maskMode
+      // opacity_f == 1.0f && maskMode
       for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
           bool cmp;
@@ -126,12 +141,12 @@ void OL_DarkenImage::BlendImageMask(ImageOverlayInternal* base, ImageOverlayInte
           else
             cmp = ovY[x] > baseY[x];
           if (cmp) {
-            result_t maskYx = maskY[x];
-            result_t maskUx = maskU[x];
-            result_t maskVx = maskV[x];
-            baseY[x] = (pixel_t)((((pixel_range - maskYx)*baseY[x]) + (maskYx * ovY[x] + half_pixel_value)) >> MASK_CORR_SHIFT);
-            baseU[x] = (pixel_t)((((pixel_range - maskUx)*baseU[x]) + (maskUx * ovU[x] + half_pixel_value)) >> MASK_CORR_SHIFT);
-            baseV[x] = (pixel_t)((((pixel_range - maskVx)*baseV[x]) + (maskVx * ovV[x] + half_pixel_value)) >> MASK_CORR_SHIFT);
+            uint32_t maskYx = maskY[x];
+            uint32_t maskUx = maskU[x];
+            uint32_t maskVx = maskV[x];
+            baseY[x] = (pixel_t)magic_div_rt<pixel_t>((max_pixel_value - maskYx)*(uint32_t)baseY[x] + maskYx * (uint32_t)ovY[x], magic);
+            baseU[x] = (pixel_t)magic_div_rt<pixel_t>((max_pixel_value - maskUx)*(uint32_t)baseU[x] + maskUx * (uint32_t)ovU[x], magic);
+            baseV[x] = (pixel_t)magic_div_rt<pixel_t>((max_pixel_value - maskVx)*(uint32_t)baseV[x] + maskVx * (uint32_t)ovV[x], magic);
           }
         }
         maskY += maskpitch;
@@ -147,7 +162,7 @@ void OL_DarkenImage::BlendImageMask(ImageOverlayInternal* base, ImageOverlayInte
         ovV += overlaypitch;
       }
     } else {
-      // opacity == 256 && !maskMode
+      // opacity_f == 1.0f && !maskMode
       if constexpr (of_darken) {
 #ifdef INTEL_INTRINSICS
         if (sizeof(pixel_t)==1 && (env->GetCPUFlags() & CPUF_SSE4_1)) {
@@ -186,7 +201,7 @@ void OL_DarkenImage::BlendImageMask(ImageOverlayInternal* base, ImageOverlayInte
 
     }
   } else {
-    // opacity != 256 && maskMode
+    // opacity_f != 1.0f && maskMode
     for (int y = 0; y < h; y++) {
       for (int x = 0; x < w; x++) {
         bool cmp;
@@ -195,19 +210,20 @@ void OL_DarkenImage::BlendImageMask(ImageOverlayInternal* base, ImageOverlayInte
         else
           cmp = ovY[x] > baseY[x];
         if (cmp)  {
+          // eff on the max_pixel_value scale; mask == max_pixel_value when absent.
+          uint32_t effY, effU, effV; // effective masks/opacity/their combinations
           if constexpr (maskMode) {
-            result_t mY = (maskY[x] * opacity) >> OPACITY_SHIFT;
-            result_t mU = (maskU[x] * opacity) >> OPACITY_SHIFT;
-            result_t mV = (maskV[x] * opacity) >> OPACITY_SHIFT;
-            baseY[x] = (pixel_t)((((pixel_range - mY)*baseY[x]) + (mY*ovY[x] + half_pixel_value)) >> MASK_CORR_SHIFT);
-            baseU[x] = (pixel_t)((((pixel_range - mU)*baseU[x]) + (mU*ovU[x] + half_pixel_value)) >> MASK_CORR_SHIFT);
-            baseV[x] = (pixel_t)((((pixel_range - mV)*baseV[x]) + (mV*ovV[x] + half_pixel_value)) >> MASK_CORR_SHIFT);
+            effY = magic_div_rt<pixel_t>((uint32_t)maskY[x] * (uint32_t)opacity_i + rounder, magic);
+            effU = magic_div_rt<pixel_t>((uint32_t)maskU[x] * (uint32_t)opacity_i + rounder, magic);
+            effV = magic_div_rt<pixel_t>((uint32_t)maskV[x] * (uint32_t)opacity_i + rounder, magic);
+          } else {
+            effY = (uint32_t)opacity_i;
+            effU = (uint32_t)opacity_i;
+            effV = (uint32_t)opacity_i;
           }
-          else {
-            baseY[x] = (pixel_t)(((inv_opacity*baseY[x]) + (opacity*ovY[x] + 128)) >> OPACITY_SHIFT); // 128: half 256 opacity mul rounding
-            baseU[x] = (pixel_t)(((inv_opacity*baseU[x]) + (opacity*ovU[x] + 128)) >> OPACITY_SHIFT);
-            baseV[x] = (pixel_t)(((inv_opacity*baseV[x]) + (opacity*ovV[x] + 128)) >> OPACITY_SHIFT);
-          }
+          baseY[x] = (pixel_t)magic_div_rt<pixel_t>((max_pixel_value - effY)*(uint32_t)baseY[x] + effY*(uint32_t)ovY[x] + rounder, magic);
+          baseU[x] = (pixel_t)magic_div_rt<pixel_t>((max_pixel_value - effU)*(uint32_t)baseU[x] + effU*(uint32_t)ovU[x] + rounder, magic);
+          baseV[x] = (pixel_t)magic_div_rt<pixel_t>((max_pixel_value - effV)*(uint32_t)baseV[x] + effV*(uint32_t)ovV[x] + rounder, magic);
         }
       }
       baseY += basepitch;

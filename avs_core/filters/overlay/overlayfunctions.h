@@ -103,9 +103,9 @@ private:
 class OL_AddImage : public OverlayFunction {
   void DoBlendImage(ImageOverlayInternal* base, ImageOverlayInternal* overlay);
   void DoBlendImageMask(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
-  template<typename pixel_t, bool maskMode, bool of_add>
+  template<typename pixel_t, bool maskMode, bool of_add, bool fullOpacity>
   void BlendImageMask(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
-  template<bool maskMode, bool of_add>
+  template<bool maskMode, bool of_add, bool fullOpacity>
   void BlendImageMask_float(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
   template<typename pixel_t, bool maskMode, bool of_add>
   void BlendImageMask_RGB(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
@@ -137,7 +137,7 @@ class OL_SoftLightImage : public OverlayFunction {
   void DoBlendImageMask(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
   template<typename pixel_t>
   void BlendImage(ImageOverlayInternal* base, ImageOverlayInternal* overlay);
-  template<typename pixel_t, bool maskMode, bool hardLight>
+  template<typename pixel_t, bool maskMode, bool hardLight, bool fullOpacity>
   void BlendImageMask(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
 };
 
@@ -146,7 +146,7 @@ class OL_DifferenceImage : public OverlayFunction {
   void DoBlendImageMask(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
   //template<typename pixel_t>
   //void BlendImage(Image444* base, Image444* overlay);
-  template<typename pixel_t, bool maskMode>
+  template<typename pixel_t, bool maskMode, bool fullOpacity>
   void BlendImageMask(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
 };
 
@@ -155,7 +155,7 @@ class OL_ExclusionImage : public OverlayFunction {
   void DoBlendImageMask(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
   // template<typename pixel_t>
   // void BlendImage(Image444* base, Image444* overlay);
-  template<typename pixel_t, bool maskMode>
+  template<typename pixel_t, bool maskMode, bool fullOpacity>
   void BlendImageMask(ImageOverlayInternal* base, ImageOverlayInternal* overlay, ImageOverlayInternal* mask);
 };
 
