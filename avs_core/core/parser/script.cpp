@@ -3074,5 +3074,5 @@ AVSValue ArraySort(AVSValue args, void* user_data, IScriptEnvironment* env)
 
 AVSValue Is440(AVSValue args, void*, IScriptEnvironment*) {  return VI(args[0]).Is440(); }
 AVSValue IsYA(AVSValue args, void*, IScriptEnvironment*)  {  return VI(args[0]).IsYA(); }
-AVSValue Is410(AVSValue args, void*, IScriptEnvironment*) {  return VI(args[0]).IsY410(); }
+AVSValue Is410(AVSValue args, void*, IScriptEnvironment*) {  return VI(args[0]).Is410(); }
 AVSValue Is411(AVSValue args, void*, IScriptEnvironment*) {  return VI(args[0]).Is411(); }

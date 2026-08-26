@@ -1062,9 +1062,9 @@ struct VideoInfo {
 
   // v13
   bool Is440() const AVS_BakedCode( return AVS_LinkCallOptDefault(Is440, false) )
-  bool IsYA() const AVS_BakedCode( return AVS_LinkCallOpt(IsYA, IsYA8) )
+  bool IsYA() const AVS_BakedCode( return AVS_LinkCallOptDefault(IsYA, false) )
   bool Is410() const AVS_BakedCode( return AVS_LinkCallOptDefault(Is410, false) )
-  bool Is411() const AVS_BakedCode( return AVS_LinkCallOpt(Is410, IsYV411) )
+  bool Is411() const AVS_BakedCode( return AVS_LinkCallOpt(Is411, IsYV411) )
 
 }; // end struct VideoInfo
 

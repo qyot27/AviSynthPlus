@@ -885,6 +885,15 @@ AVSC_API(void, avs_set_channel_mask)(const AVS_VideoInfo* p, bool isChannelMaskK
 
 AVSC_API(unsigned int, avs_get_channel_mask)(const AVS_VideoInfo* p);
 
+// V13
+AVSC_API(int, avs_is_440)(const AVS_VideoInfo * p);
+
+AVSC_API(int, avs_is_ya)(const AVS_VideoInfo * p);
+
+AVSC_API(int, avs_is_410)(const AVS_VideoInfo * p);
+
+AVSC_API(int, avs_is_411)(const AVS_VideoInfo * p);
+
 // end of Avisynth+ specific
 
 /////////////////////////////////////////////////////////////////////
@@ -1770,6 +1779,11 @@ struct AVS_Library {
   AVSC_DECLARE_FUNC(avs_acquire_global_lock);
   AVSC_DECLARE_FUNC(avs_release_global_lock);
   AVSC_DECLARE_FUNC(avs_get_cpu_flags_ex);
+  // V13
+  AVSC_DECLARE_FUNC(avs_is_440);
+  AVSC_DECLARE_FUNC(avs_is_ya);
+  AVSC_DECLARE_FUNC(avs_is_410);
+  AVSC_DECLARE_FUNC(avs_is_411);
 };
 
 #undef AVSC_DECLARE_FUNC
@@ -2063,6 +2077,11 @@ avs_bits_per_component    constant 8 (8 bits/component)
   AVSC_LOAD_FUNC_OPT(avs_acquire_global_lock);
   AVSC_LOAD_FUNC_OPT(avs_release_global_lock);
   AVSC_LOAD_FUNC_OPT(avs_get_cpu_flags_ex);
+  // V13
+  AVSC_LOAD_FUNC_OPT(avs_is_440);
+  AVSC_LOAD_FUNC_OPT(avs_is_ya);
+  AVSC_LOAD_FUNC_OPT(avs_is_410);
+  AVSC_LOAD_FUNC_OPT(avs_is_411);
 
 #undef __AVSC_STRINGIFY
 #undef AVSC_STRINGIFY
