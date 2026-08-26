@@ -243,6 +243,7 @@ enum {
   AVS_CS_GENERIC_YUV422  = AVS_CS_PLANAR | AVS_CS_YUV  | AVS_CS_VPLANEFIRST | AVS_CS_SUB_WIDTH_2 | AVS_CS_SUB_HEIGHT_1, // 4:2:2 planar
   AVS_CS_GENERIC_YUV420  = AVS_CS_PLANAR | AVS_CS_YUV  | AVS_CS_VPLANEFIRST | AVS_CS_SUB_WIDTH_2 | AVS_CS_SUB_HEIGHT_2, // 4:2:0 planar
   AVS_CS_GENERIC_Y       = AVS_CS_PLANAR | AVS_CS_INTERLEAVED | AVS_CS_YUV,                                             // Y only (4:0:0)
+  AVS_CS_GENERIC_YA      = AVS_CS_PLANAR | AVS_CS_INTERLEAVED | AVS_CS_YUVA,                                            // Y plus alpha (4:0:0:A)
   AVS_CS_GENERIC_RGBP    = AVS_CS_PLANAR | AVS_CS_BGR  | AVS_CS_RGB_TYPE,                                               // planar RGB
   AVS_CS_GENERIC_RGBAP   = AVS_CS_PLANAR | AVS_CS_BGR  | AVS_CS_RGBA_TYPE,                                              // planar RGBA
   AVS_CS_GENERIC_YUVA444 = AVS_CS_PLANAR | AVS_CS_YUVA | AVS_CS_VPLANEFIRST | AVS_CS_SUB_WIDTH_1 | AVS_CS_SUB_HEIGHT_1, // 4:4:4:A planar
@@ -392,7 +393,17 @@ enum {
   AVS_CS_YUVA410P12 = AVS_CS_GENERIC_YUVA410 | AVS_CS_SAMPLE_BITS_12, // YUVA 4:1:0 12bit samples
   AVS_CS_YUVA410P14 = AVS_CS_GENERIC_YUVA410 | AVS_CS_SAMPLE_BITS_14, // YUVA 4:1:0 14bit samples
   AVS_CS_YUVA410P16 = AVS_CS_GENERIC_YUVA410 | AVS_CS_SAMPLE_BITS_16, // YUVA 4:1:0 16bit samples
-  AVS_CS_YUVA410PS  = AVS_CS_GENERIC_YUVA410 | AVS_CS_SAMPLE_BITS_32  // YUVA 4:1:0 32bit samples
+  AVS_CS_YUVA410PS  = AVS_CS_GENERIC_YUVA410 | AVS_CS_SAMPLE_BITS_32, // YUVA 4:1:0 32bit samples
+
+  // Y plus alpha 4:0:0 - 2026-08-25
+  AVS_CS_YA8  = AVS_CS_GENERIC_YA | AVS_CS_SAMPLE_BITS_8,  // Y plus alpha 4:0:0 planar 8bit samples
+  AVS_CS_YA10 = AVS_CS_GENERIC_YA | AVS_CS_SAMPLE_BITS_10, // Y plus alpha 4:0:0 planar 10bit samples
+  AVS_CS_YA12 = AVS_CS_GENERIC_YA | AVS_CS_SAMPLE_BITS_12, // Y plus alpha 4:0:0 planar 12bit samples
+  AVS_CS_YA14 = AVS_CS_GENERIC_YA | AVS_CS_SAMPLE_BITS_14, // Y plus alpha 4:0:0 planar 14bit samples
+  AVS_CS_YA16 = AVS_CS_GENERIC_YA | AVS_CS_SAMPLE_BITS_16, // Y plus alpha 4:0:0 planar 16bit samples
+  AVS_CS_YAS  = AVS_CS_GENERIC_YA | AVS_CS_SAMPLE_BITS_32, // Y plus alpha 4:0:0 planar 32bit samples, float
+
+  AVS_CS_YS  = AVS_CS_Y32 // Y   4:0:0 32bit samples, float alias
 };
 
 // AvsChannelMask enum: Unshifted channel mask constants like in WAVEFORMATEXTENSIBLE

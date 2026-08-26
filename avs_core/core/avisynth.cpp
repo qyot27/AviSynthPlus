@@ -4405,7 +4405,7 @@ PVideoFrame ScriptEnvironment::NewVideoFrameOnDevice(const VideoInfo& vi, int al
     case VideoInfo::CS_YUV420PS:
     case VideoInfo::CS_YUV422PS:
     case VideoInfo::CS_YUV444PS:
-    case VideoInfo::CS_Y32:
+    case VideoInfo::CS_YS:
         // 16 bit/sample packed RGB
     case VideoInfo::CS_BGR48:
     case VideoInfo::CS_BGR64:
@@ -4483,6 +4483,13 @@ PVideoFrame ScriptEnvironment::NewVideoFrameOnDevice(const VideoInfo& vi, int al
     case VideoInfo::CS_YUVA410P14:
     case VideoInfo::CS_YUVA410P16:
     case VideoInfo::CS_YUVA410PS:
+        // Y+α 4:0:0:A
+    case VideoInfo::CS_YA8:
+    case VideoInfo::CS_YA10:
+    case VideoInfo::CS_YA12:
+    case VideoInfo::CS_YA14:
+    case VideoInfo::CS_YA16:
+    case VideoInfo::CS_YAS:
         break;
     default:
       ThrowError("Filter Error: Filter attempted to create VideoFrame with invalid pixel_type.");

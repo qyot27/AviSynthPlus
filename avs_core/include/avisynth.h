@@ -730,6 +730,7 @@ struct VideoInfo {
     CS_GENERIC_YUV422  = CS_PLANAR | CS_YUV | CS_VPlaneFirst | CS_Sub_Width_2 | CS_Sub_Height_1,  // 4:2:2 planar
     CS_GENERIC_YUV420  = CS_PLANAR | CS_YUV | CS_VPlaneFirst | CS_Sub_Width_2 | CS_Sub_Height_2,  // 4:2:0 planar
     CS_GENERIC_Y       = CS_PLANAR | CS_INTERLEAVED | CS_YUV,                                     // Y only (4:0:0)
+    CS_GENERIC_YA      = CS_PLANAR | CS_INTERLEAVED | CS_YUVA,                                    // Y plus alpha (4:0:0:A)
     CS_GENERIC_RGBP    = CS_PLANAR | CS_BGR | CS_RGB_TYPE,                                        // planar RGB. Though name is RGB but plane order G,B,R
     CS_GENERIC_RGBAP   = CS_PLANAR | CS_BGR | CS_RGBA_TYPE,                                       // planar RGBA
     CS_GENERIC_YUVA444 = CS_PLANAR | CS_YUVA | CS_VPlaneFirst | CS_Sub_Width_1 | CS_Sub_Height_1, // 4:4:4:A planar
@@ -872,7 +873,17 @@ struct VideoInfo {
     CS_YUVA410P12 = CS_GENERIC_YUVA410 | CS_Sample_Bits_12, // YUVA 4:1:0 12bit samples
     CS_YUVA410P14 = CS_GENERIC_YUVA410 | CS_Sample_Bits_14, // YUVA 4:1:0 14bit samples
     CS_YUVA410P16 = CS_GENERIC_YUVA410 | CS_Sample_Bits_16, // YUVA 4:1:0 16bit samples
-    CS_YUVA410PS  = CS_GENERIC_YUVA410 | CS_Sample_Bits_32  // YUVA 4:1:0 32bit samples
+    CS_YUVA410PS  = CS_GENERIC_YUVA410 | CS_Sample_Bits_32, // YUVA 4:1:0 32bit samples
+
+    // Y plus alpha 4:0:0, 2026-08-25
+    CS_YA8  = CS_GENERIC_YA | CS_Sample_Bits_8,  // Y plus alpha 4:0:0 8bit samples
+    CS_YA10 = CS_GENERIC_YA | CS_Sample_Bits_10, // Y plus alpha 4:0:0 10bit samples
+    CS_YA12 = CS_GENERIC_YA | CS_Sample_Bits_12, // Y plus alpha 4:0:0 12bit samples
+    CS_YA14 = CS_GENERIC_YA | CS_Sample_Bits_14, // Y plus alpha 4:0:0 14bit samples
+    CS_YA16 = CS_GENERIC_YA | CS_Sample_Bits_16, // Y plus alpha 4:0:0 16bit samples
+    CS_YAS  = CS_GENERIC_YA | CS_Sample_Bits_32, // Y plus alpha 4:0:0 32bit samples, float
+
+    CS_YS  = CS_Y32 // Y   4:0:0 32bit samples, float
   };
 
   int pixel_type;                // changed to int as of 2.5
