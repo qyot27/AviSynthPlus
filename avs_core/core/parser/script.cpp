@@ -1657,7 +1657,6 @@ static const std::multimap<int, std::string> pixel_format_table_ex =
   {VideoInfo::CS_YUVA444, "YUVA444P8"},
   {VideoInfo::CS_YUV440 , "YUV440P8"},
   {VideoInfo::CS_YUVA440, "YUVA440P8"},
-  {VideoInfo::CS_YV411  , "YUV411P8"},
   {VideoInfo::CS_YUVA411, "YUVA411P8"},
   {VideoInfo::CS_YUV410,  "YUV410P8"},
   {VideoInfo::CS_YUVA410, "YUVA410P8"},

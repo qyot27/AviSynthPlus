@@ -847,6 +847,7 @@ struct VideoInfo {
     CS_YUVA440PS  = CS_GENERIC_YUVA440 | CS_Sample_Bits_32, // YUVA 4:4:0 32bit samples
 
     // Planar YUV(A) 4:1:1 additional bitdepths, 2026-08-25
+    CS_YUV411     = CS_YV411,                              // YUV 4:1:1 8bit samples
     CS_YUV411P10  = CS_GENERIC_YUV411 | CS_Sample_Bits_10, // YUV 4:1:1 10bit samples
     CS_YUV411P12  = CS_GENERIC_YUV411 | CS_Sample_Bits_12, // YUV 4:1:1 12bit samples
     CS_YUV411P14  = CS_GENERIC_YUV411 | CS_Sample_Bits_14, // YUV 4:1:1 14bit samples

@@ -367,6 +367,7 @@ enum {
   AVS_CS_YUVA440PS  = AVS_CS_GENERIC_YUVA440 | AVS_CS_SAMPLE_BITS_32, // YUVA 4:4:0 32bit samples
 
   // Planar YUV(A) 4:1:1 additional formats - 2026-08-25
+  AVS_CS_YUV411     = AVS_CS_YV411,                                   // YUV 4:1:1 10bit samples
   AVS_CS_YUV411P10  = AVS_CS_GENERIC_YUV411 | AVS_CS_SAMPLE_BITS_10,  // YUV 4:1:1 10bit samples
   AVS_CS_YUV411P12  = AVS_CS_GENERIC_YUV411 | AVS_CS_SAMPLE_BITS_12,  // YUV 4:1:1 12bit samples
   AVS_CS_YUV411P14  = AVS_CS_GENERIC_YUV411 | AVS_CS_SAMPLE_BITS_14,  // YUV 4:1:1 14bit samples
