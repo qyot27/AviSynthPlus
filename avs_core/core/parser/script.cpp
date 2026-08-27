@@ -2778,15 +2778,19 @@ AVSValue ArrayIns(AVSValue args, void* user_data, IScriptEnvironment* env)
     mode == DEL && index_count == 1 ? orig_size - 1 :
     mode == APPEND && index_count == 0 ? orig_size + 1 :
     mode == INSERT && index_count == 1 ? orig_size + 1 :
-    orig_size; // replace and recurside other cases
+    orig_size; // replace and recursive other cases
 
   std::vector<AVSValue> new_val(new_size);
 
   int action_pos;
   if (mode == APPEND)
     action_pos = orig_size; // at the end
-  else
+  else {
     action_pos = indexes[0].AsInt();
+    const int max_valid_pos = (mode == INSERT && index_count == 1) ? orig_size : orig_size - 1;
+    if (action_pos < 0 || action_pos > max_valid_pos)
+      env->ThrowError("%s: index %d out of range (array size is %d)", funcname, action_pos, orig_size);
+  }
 
   // copy before insertion/replace point
   for (int i = 0; i < action_pos; i++)
@@ -2797,6 +2801,8 @@ AVSValue ArrayIns(AVSValue args, void* user_data, IScriptEnvironment* env)
     ((mode == APPEND) && index_count >= 1))
   {
     int current_index = indexes[0].AsInt();
+    if (current_index < 0 || current_index >= orig_size)
+      env->ThrowError("%s: index %d out of range (array size is %d)", funcname, current_index, orig_size);
     // for multi-level array recursion is needed because there is no exact reference to an inner element
     if (mode == DEL) {
       AVSValue params[2] = { args[0][current_index], index_count <= 1 ? AVSValue(nullptr, 0) : AVSValue(&indexes[1], index_count - 1) };
