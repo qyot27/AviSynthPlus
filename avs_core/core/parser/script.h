@@ -316,8 +316,10 @@ AVSValue VarExist(AVSValue args, void*, IScriptEnvironment* env); // avs+ 180606
 AVSValue ArrayCreate(AVSValue args, void*, IScriptEnvironment* env);
 AVSValue IsArray(AVSValue args, void*, IScriptEnvironment* env);
 AVSValue ArrayGet(AVSValue args, void*, IScriptEnvironment* env);
+AVSValue ArrayIndexOf(AVSValue args, void*, IScriptEnvironment* env);
 AVSValue ArraySize(AVSValue args, void*, IScriptEnvironment* env);
 AVSValue ArrayIns(AVSValue args, void*, IScriptEnvironment* env);
+AVSValue ArraySetByKey(AVSValue args, void*, IScriptEnvironment* env);
 AVSValue ArrayDel(AVSValue args, void*, IScriptEnvironment* env);
 AVSValue ArraySort(AVSValue args, void*, IScriptEnvironment* env);
 

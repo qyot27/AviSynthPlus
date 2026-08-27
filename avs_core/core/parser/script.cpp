@@ -349,12 +349,19 @@ extern const AVSFunction Script_functions[] = {
   { "ArrayGet",  BUILTIN_FUNC_PREFIX, ".s", ArrayGet },
     // classic array indexing background helper: e.g. a[3,4] -> ArrayGet(a, [2,3])
   { "ArrayGet",  BUILTIN_FUNC_PREFIX, ".i+", ArrayGet }, // .+i+ syntax is not possible.
+    // dictionary type array key -> index lookup, -1 if not found
+  { "ArrayIndexOf", BUILTIN_FUNC_PREFIX, ".s", ArrayIndexOf },
     // length can be zero
   { "ArraySize", BUILTIN_FUNC_PREFIX, ".", ArraySize },
+    // Insert/Add/Replace can share the same logic
   { "ArrayIns",  BUILTIN_FUNC_PREFIX, "..i+", ArrayIns, (void*)0 },
   { "ArrayAdd",  BUILTIN_FUNC_PREFIX, "..i*", ArrayIns, (void*)1 },
   { "ArraySet",  BUILTIN_FUNC_PREFIX, "..i+", ArrayIns, (void*)2 },
+    // dictionary type array key set: smart replace-on-exist / append-on-missing [key, value]
+  { "ArraySet",  BUILTIN_FUNC_PREFIX, "..s", ArraySetByKey, (void*)0 },
   { "ArrayDel",  BUILTIN_FUNC_PREFIX, ".i+", ArrayIns, (void*)3 },
+  // dictionary type array key delete
+  { "ArrayDel",  BUILTIN_FUNC_PREFIX, ".s", ArraySetByKey, (void*)1 },
   { "ArraySort",  BUILTIN_FUNC_PREFIX, ".", ArraySort, (void*)0 },
 
   /*
@@ -2664,42 +2671,68 @@ AVSValue ArrayGet(AVSValue args, void*, IScriptEnvironment* env)
   const int size = args[0].ArraySize();
   if (args[1].IsString()) {
     // associative search
+    // linear search and case insensitive key match
     // { {"a", element1}, { "b", element2 }, etc..}
-const char* tag = args[1].AsString();
-for (int i = 0; i < size; i++)
-{
-  AVSValue currentTagValue = args[0][i]; // two elements e.g. { "b", element2 }
-  if (!currentTagValue.IsArray())
-    env->ThrowError("ArrayGet: Array must contain array[string, any] elements for dictionary lookup");
-  if (currentTagValue.ArraySize() < 2)
-    env->ThrowError("ArrayGet: Internal array must have at least two elements (tag, value)");
-  AVSValue currentTag = currentTagValue[0];
-  if (currentTag.IsString() && !lstrcmpi(currentTag.AsString(), tag))
-  {
-    return currentTagValue[1];
-  }
-}
-return AVSValue(); // undefined
+    const char* tag = args[1].AsString();
+    for (int i = 0; i < size; i++)
+    {
+      AVSValue currentTagValue = args[0][i]; // two elements e.g. { "b", element2 }
+      if (!currentTagValue.IsArray())
+        env->ThrowError("ArrayGet: Array must contain array[string, any] elements for dictionary lookup");
+      if (currentTagValue.ArraySize() < 2)
+        env->ThrowError("ArrayGet: Internal array must have at least two elements (tag, value)");
+      AVSValue currentTag = currentTagValue[0];
+      if (currentTag.IsString() && !lstrcmpi(currentTag.AsString(), tag))
+      {
+        return currentTagValue[1];
+      }
+    }
+    return AVSValue(); // undefined if not found
   }
   else if (args[1].IsArray()) {
-  AVSValue indexes = args[1];
-  AVSValue currentValue = args[0];
-  int index_count = indexes.ArraySize(); // array of parameters. a[1,2] -> [1,2]
-  if (index_count == 0)
-    env->ThrowError("ArrayGet: no index specified");
-  for (int i = 0; i < index_count; i++)
-  {
-    if (!currentValue.IsArray())
-      env->ThrowError("ArrayGet: not an array. Index=%d", i);
-    int currentIndex = indexes[i].AsInt();
-    if (currentIndex < 0 || currentIndex >= currentValue.ArraySize())
-      env->ThrowError("ArrayGet: Array index out of range. Problematic index count: %d", i + 1);
-    currentValue = currentValue[currentIndex];
-  }
-  return currentValue;
+    // array, even is only a single index is used
+    AVSValue indexes = args[1];
+    AVSValue currentValue = args[0];
+    int index_count = indexes.ArraySize(); // array of parameters. a[1,2] -> [1,2]
+    if (index_count == 0)
+      env->ThrowError("ArrayGet: no index specified");
+    for (int i = 0; i < index_count; i++)
+    {
+      if (!currentValue.IsArray())
+        env->ThrowError("ArrayGet: not an array. Index=%d", i);
+      int currentIndex = indexes[i].AsInt();
+      if (currentIndex < 0 || currentIndex >= currentValue.ArraySize())
+        env->ThrowError("ArrayGet: Array index out of range. Problematic index count: %d", i + 1);
+      currentValue = currentValue[currentIndex];
+    }
+    return currentValue;
   }
   env->ThrowError("ArrayGet: Invalid array index, must be integer or string, or comma separated integers");
+  // unreachable, but to avoid compiler warning
   return AVSValue(); // undefined
+}
+
+AVSValue ArrayIndexOf(AVSValue args, void*, IScriptEnvironment* env)
+{
+  // signature .s
+  // parameters: [0] dictionary style array to search; [1] key (case insensitive)
+  // { {"a", element1}, { "b", element2 }, etc..}
+  if (!args[0].IsArray())
+    env->ThrowError("ArrayIndexOf: array type required.");
+  const int size = args[0].ArraySize();
+  const char* tag = args[1].AsString();
+  for (int i = 0; i < size; i++)
+  {
+    AVSValue currentTagValue = args[0][i]; // must be a key-value pair with two elements e.g. { "b", element2 }
+    if (!currentTagValue.IsArray())
+      env->ThrowError("ArrayIndexOf: Array must contain array[string, any] elements for dictionary lookup");
+    if (currentTagValue.ArraySize() < 2)
+      env->ThrowError("ArrayIndexOf: Internal array must have at least two elements (tag, value)");
+    AVSValue currentTag = currentTagValue[0];
+    if (currentTag.IsString() && !lstrcmpi(currentTag.AsString(), tag))
+      return i;
+  }
+  return -1; // not found
 }
 
 AVSValue ArraySize(AVSValue args, void*, IScriptEnvironment* env)
@@ -2797,6 +2830,85 @@ AVSValue ArrayIns(AVSValue args, void* user_data, IScriptEnvironment* env)
     return AVSValue(nullptr, 0); // zero array
 
   return AVSValue(new_val.data(), new_size);
+}
+
+AVSValue ArraySetByKey(AVSValue args, void* user_data, IScriptEnvironment* env)
+{
+  int mode = (int)(intptr_t)user_data;
+  enum ArrayMode {
+    INSERT_OR_APPEND = 0,
+    DEL = 1
+  };
+  // INSERT_OR_APPEND: 
+  // signature ..s
+  // parameters: [0] dictionary style array to modify; [1] value; [2] key
+  // Replaces the value at the matching key, or appends a new [key, value] pair if the key is not found.
+
+  // DEL:
+  // signature .s
+  // parameters: [0] dictionary style array to delete from; [1] key
+  // Deletes the key-value pair if the key is found. No-op otherwise.
+
+  const char* funcname = mode == DEL ? "ArrayDel" : "ArraySet";
+
+  // Array of key-value pairs, e.g.
+  // { {"a", element1}, { "b", element2 }, etc..}
+  if (!args[0].IsArray())
+    env->ThrowError("%s: array type required.", funcname);
+  const int size = args[0].ArraySize();
+  const char* tag = mode == DEL ? args[1].AsString() : args[2].AsString();
+  int found = -1;
+  // first a linear search for the key (case insensitive) to find the index of the matching pair
+  for (int i = 0; i < size; i++)
+  {
+    AVSValue currentTagValue = args[0][i]; // two elements e.g. { "b", element2 }
+    if (!currentTagValue.IsArray())
+      env->ThrowError("%s: Array must contain array[string, any] elements for dictionary lookup", funcname);
+    if (currentTagValue.ArraySize() < 2)
+      env->ThrowError("%s: Internal array must have at least two elements (tag, value)", funcname);
+    AVSValue currentTag = currentTagValue[0];
+    if (currentTag.IsString() && !lstrcmpi(currentTag.AsString(), tag))
+    {
+      found = i;
+      break;
+    }
+  }
+
+  // DEL
+  if (mode == DEL) {
+    if (found < 0)
+      return args[0]; // key not found: no-op, return the original array untouched
+
+    const int new_size = size - 1;
+    if (new_size == 0)
+      return AVSValue(nullptr, 0); // delete the only element, resulting in a zero array
+
+    std::vector<AVSValue> new_val(new_size);
+    // copy before the deleted pair
+    for (int i = 0; i < found; i++)
+      new_val[i] = args[0][i]; // avs+: automatic deep copy
+    // copy after the deleted pair
+    for (int i = found + 1; i < size; i++)
+      new_val[i - 1] = args[0][i];
+
+    return AVSValue(new_val.data(), new_size); // create AVSValue from array and return
+  }
+
+  // INSERT_OR_APPEND
+  // Have to copy the original array even when replacing an existing value,
+  // we cannot modify the original array in place.
+  const int new_size = (found >= 0) ? size : size + 1;
+  std::vector<AVSValue> new_val(new_size);
+  for (int i = 0; i < size; i++)
+    new_val[i] = args[0][i]; // avs+: automatic deep copy
+
+  AVSValue pair_elems[2] = { AVSValue(tag), args[1] };
+
+  const int action_pos = found >= 0 ? found : size; // replace or append
+
+  new_val[action_pos] = AVSValue(pair_elems, 2);
+
+  return AVSValue(new_val.data(), new_size); // create AVSValue from array and return
 }
 
 // Custom comparator functions for sorting
