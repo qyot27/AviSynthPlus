@@ -10,7 +10,10 @@ Beginning Avisynth+ 3.6 script arrays are supported. Functionality is different 
 -  Arrays can have one or more dimensions
 -  They even can be empty.
 -  AVSValue (internal representation of any Avisynth variable) is deep copied for arrays (arrays in arrays in ...)
-   (note: this is true when using them through c++ plugins. C interface is different, there is no deep-copy there)
+   (C plugin interface note: since interface V11, this is true for the C interface as well. ``avs_copy_value`` 
+   deep copies and ``avs_release_value`` deep releases arrays, matching C++ assignment and destruction behavior. 
+   Exception: a hand-created raw AVS_Value array that a C interface plugin assembled itself, e.g. on the 
+   stack to pass as call arguments, is not owned by Avisynth and must not be passed to ``avs_release_value``)
 -  untyped and unconstrained element number
 -  arrays can appear as internal filter parameters (named and unnamed).
 -  arrays can appear as user defined function parameters (named and unnamed).

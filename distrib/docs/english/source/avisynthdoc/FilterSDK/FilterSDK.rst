@@ -377,6 +377,10 @@ What's new in the API V11
             * ``avs_set_to_double``, ``avs_set_to_long``
             * ``avs_set_to_array`` (deep arrays, deep copy, standard in AviSynth+)
               (Note: avs_release_value and avs_copy_value are required for destruct or copy arrays)
+          - changed: ``avs_copy_value`` and ``avs_release_value`` now deep-copy and deep-release arrays,
+            matching C++ ``AVSValue`` behavior. Previously the C interface only shallow-copied (single level)
+            and did not free array elements (internally, arrays were flagged as non-deep-copy via a now unused
+            code path). See :ref:`avs_copy_value <c_avs_copy_value>`.
           - API version of existing INLINE value setters (``new_value_xxx``) for the rest value types, to make the world round:
             
             * ``avs_set_to_error``, ``avs_set_to_bool``, ``avs_set_to_int``, ``avs_set_to_float``, ``avs_set_to_string``
