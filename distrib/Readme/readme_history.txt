@@ -9,8 +9,12 @@ For online documentation check https://avisynthplus.readthedocs.io/en/latest/
 Actual:
 https://avisynthplus.readthedocs.io/en/latest/avisynthdoc/changelist376.html
 
-20260826 3.7.5.rXXXX (pre 3.7.6)
+20260827 3.7.5.rXXXX (pre 3.7.6)
 --------------------------------
+- New array syntax: add dictionary-style ArraySet (replaces or appends)
+- New array syntax: add dictionary-style ArrayDel (deletes by key, no-op if not found)
+- New array syntax: add ArrayIndexOf which returns the actual index of the dictionary-style array search
+  See https://avisynthplus.readthedocs.io/en/latest/avisynthdoc/script_ref/script_ref_arrays.html
 - Fix #505: Expr Vector-C relative-row addressing (x[dx,dy]) ignored the current row
   entirely, and additionally mis-scaled the row byte offset for 16-bit/float sources.
 - Fix #506: Compare 32-bit SAD/SD accumulators (8-bit packed/planar, C and SSE2/ISSE

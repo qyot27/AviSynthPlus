@@ -3,6 +3,13 @@ Changes from 3.7.5 to 3.7.6
 
 Additions, changes
 ~~~~~~~~~~~~~~~~~~
+- New array syntax: 
+
+  * dictionary-style ArraySet (replaces or appends).
+  * dictionary-style ArrayDel (deletes by key, no-op if not found).
+  * dictionary-style ArrayIndexOf (returns the actual index of the dictionary-style array search).
+
+  See :doc:`Arrays <./script_ref/script_ref_arrays>`.
 - Added ``SetFilterProp``, ``GetFilterProps``, and ``SetFilterPropPassthrough``:
 
   * ``SetFilterProp`` — automatically inject a frame property on the output of a named filter
@@ -435,12 +442,14 @@ Documentation
 - Update :doc:`Layer <./corefilters/layer>` with ``"mulovr"`` mode, ``"top_left"`` placement
   option, and related chroma-placement refactoring notes.
 - Update :doc:`Overlay <./corefilters/overlay>` with ``"placement"`` parameter for ``"blend"`` mode.
+- Update :doc:`Arrays <./script_ref/script_ref_arrays>` with dictionary-style key lookup/set/delete
+  (``ArrayGet``, ``ArraySet``, ``ArrayDel``) and the new ``ArrayIndexOf``.
 
 
 Please report bugs at `github AviSynthPlus page`_ - or - `Doom9's AviSynth+
 forum`_
 
-$Date: 2026/04/30 12:00:00 $
+$Date: 2026/08/27 10:20:00 $
 
 .. _github AviSynthPlus page:
     https://github.com/AviSynth/AviSynthPlus
