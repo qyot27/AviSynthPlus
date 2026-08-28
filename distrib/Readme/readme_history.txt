@@ -9,18 +9,48 @@ For online documentation check https://avisynthplus.readthedocs.io/en/latest/
 Actual:
 https://avisynthplus.readthedocs.io/en/latest/avisynthdoc/changelist376.html
 
-20260827 3.7.5.rXXXX (pre 3.7.6)
+20260828 3.7.5.rXXXX (pre 3.7.6)
+--------------------------------
+- Fix #514: Layer op="mul" ignored the overlay's alpha mask when not using full opacity. 
+  (regression since r4589 test).
+
+20260827 3.7.5.r4669 (pre 3.7.6)
 --------------------------------
 - New array syntax: add dictionary-style ArraySet (replaces or appends)
 - New array syntax: add dictionary-style ArrayDel (deletes by key, no-op if not found)
 - New array syntax: add ArrayIndexOf which returns the actual index of the dictionary-style array search
   See https://avisynthplus.readthedocs.io/en/latest/avisynthdoc/script_ref/script_ref_arrays.html
+- Fix #494: RGB->YUV 16-bit conversion overflow; switched to a 32-bit float workflow
+  instead of 64-bit integer (for performance). Test version regression.
+- Fix #496: RGB->YUV AVX2 path used the wrong test for checking full-range destination (full_d). Test version regression.
+- Fix #497: YUV->YUV conversion chroma issues (in test code path prepared but not yet live).
+- Fix #498: SIMD rounding correction for planar RGB8 full range -> Y10 limited range
+  conversion. Test version regression.
+- Fix: RGB->YUV matrix Y offset: no unity correction was applied when converting
+  narrow-range RGB to full-range Y.
+- Fix #499: RGBAdjust: an uninitialized conditional parameter caused the existing
+  rgbadjust_ branch to always run regardless of settings. Also fixed a memory leak
+  when freeing LUT tables.
+- Fix: AVX512 horizontal resampler coefficient preparation for fixed type coeff advances.
+  Test version regression.
+- Fix: TemporalSoften 16-bit scalar (C) rounding.
+- Fix: AVX2 YV24 (4:4:4) source alpha packing. Test version regression.
+- Fix: Expr: a typo checked the output clip's IsYUVA() instead of the source clip's
+  when selecting per-source plane enums, which could read the wrong plane for certain
+  mixed colorspace expressions.
+- Fix: static-analysis findings (memory leaks / buffer overruns, no
+  user-visible behavior change), tagged AVSP001-AVSP018: ColorBars audio array leak,
+  FastReadStream pHeaders array leak, ConvertAudio temp buffer allocation check,
+  AVIReadHandler streamBuffer leak, the script parser's Spline work buffer (now
+  RAII-managed), the TimeStretch plugin's buffer offset/memcpy undefined behavior,
+  Levels use_lut+dither buffer overrun, the script parser's arg_names array overrun,
+  and a PluginManager constructor memory leak.
 - Fix #505: Expr Vector-C relative-row addressing (x[dx,dy]) ignored the current row
-  entirely, and additionally mis-scaled the row byte offset for 16-bit/float sources.
-- Fix #506: Compare 32-bit SAD/SD accumulators (8-bit packed/planar, C and SSE2/ISSE
-  paths) could overflow on large frames (e.g. 4K RGB32); now 64-bit unconditionally.
+  entirely. Additionally the row byte offset for 16-bit/float sources were mis-scaled.
+- Fix #506: Compare 32-bit SAD/SD accumulators could overflow on large frames (e.g. 4K RGB32)
+  now 64-bit unconditionally, not only for 10+ bit formats.
 - Fix #507: Compare RGB24/RGB48 MAD/MD denominator divided by a hardcoded 4 (assumed
-  4 channels/pixel) instead of the actual per-pixel component count (3).
+  4 channels/pixel) instead of the actual component count (3).
 - Fix #508: Compare uninitialized internal mask could give non-deterministic MAD/MD
   results for RGB48/RGB64.
 - Fix #509: ConvertBits automatic preconversion for large dither_bits gaps (e.g.
@@ -82,7 +112,7 @@ https://avisynthplus.readthedocs.io/en/latest/avisynthdoc/changelist376.html
 - Layer: fix regression in PlanarRGB(A) "add" mode — opacity was inadvertently
   ignored after the recent packed/planar RGB refactoring.
 
-20260518 3.7.5.r45XX (pre 3.7.6)
+20260518 3.7.5.r4604 (pre 3.7.6)
 --------------------------------
 - Fix: 32-bit MSVC build — __popcnt64 is unavailable in 32-bit targets; use the
   32-bit-compatible equivalent instead.
@@ -104,7 +134,7 @@ https://avisynthplus.readthedocs.io/en/latest/avisynthdoc/changelist376.html
   downsampling (8 MaskModes covering all subsampling ratios x siting variants;
   SIMD rowprep dispatch matching Overlay/Layer).
 
-20260508 3.7.5.r45XX (pre 3.7.6)
+20260508 3.7.5.r45xx (pre 3.7.6)
 --------------------------------
 - ShowCRC32: new "channels" (select planes), "mode" (0=combined, 1=per-plane), and
   "showmode" (0=display, 1=display+frameprop, 2=frameprop only) parameters;

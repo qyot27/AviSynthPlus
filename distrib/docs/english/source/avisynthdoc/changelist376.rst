@@ -326,6 +326,23 @@ Bugfixes
     when the overlay position is not chroma-grid-aligned.  A ceiling formula replaces the old
     floor division, which caused the rightmost column or bottom row of affected chroma pixels
     to be skipped.
+- Fix: RGB->YUV matrix Y offset: missing unity correction when converting narrow range RGB 
+  to full range Y.
+- Fix #499: "RGBAdjust": an uninitialized conditional parameter caused the existing
+  ``rgbadjust_`` branch to always run regardless of settings. Also fixed a memory leak
+  when freeing LUT tables.
+- Fix: "TemporalSoften" 16-bit scalar (C) rounding.
+- Fix: AVX2 YV24 (4:4:4) source alpha packing.
+- Fix: "Expr": a typo checked the output clip's ``IsYUVA()`` instead of the source
+  clip's when selecting per-source plane enums, which could read the wrong plane for
+  certain mixed colorspace expressions.
+- Fix: static-analysis findings (memory leaks / buffer overruns, not user visible), 
+  Tagged as AVSP001-AVSP018: ``ColorBars`` audio array leak,
+  ``FastReadStream`` ``pHeaders`` array leak, ``ConvertAudio`` temp buffer allocation
+  check, ``AVIReadHandler`` ``streamBuffer`` leak, the script parser's ``Spline`` work
+  buffer (now RAII-managed), the ``TimeStretch`` plugin's buffer offset/``memcpy``
+  undefined behavior, "Levels" ``use_lut``+dither buffer overrun, the script parser's
+  ``arg_names`` array overrun, and a ``PluginManager`` constructor memory leak.
 - Fix #505: "Expr" Vector-C relative-row addressing (``x[dx,dy]``) ignored the current row
   entirely, and additionally mis-scaled the row byte offset for 16-bit/float sources.
 - Fix #506: "Compare" 32-bit SAD/SD accumulators (8-bit packed/planar, C and SSE2/ISSE paths)
