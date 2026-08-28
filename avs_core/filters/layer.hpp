@@ -128,7 +128,7 @@ static void layer_yuv_mul_c(BYTE* dstp8, const BYTE* ovrp8, const BYTE* maskp8, 
       layer_yuv_mul_c_inner<maskMode, pixel_t, is_chroma, true, true>(
         dstp8, ovrp8, maskp8, dst_pitch, overlay_pitch, mask_pitch, width, height, opacity_i, bits_per_pixel);
     else
-      layer_yuv_mul_c_inner<maskMode, pixel_t, is_chroma, false, false>(
+      layer_yuv_mul_c_inner<maskMode, pixel_t, is_chroma, true, false>(
         dstp8, ovrp8, maskp8, dst_pitch, overlay_pitch, mask_pitch, width, height, opacity_i, bits_per_pixel);
   }
 }
