@@ -24,6 +24,7 @@ FILE(GLOB AvsCore_Sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
   "filters/*.c"
   "filters/*.cpp"
   "filters/*.h"
+  "filters/*.hpp"
 
   "filters/conditional/*.c"
   "filters/conditional/*.cpp"
