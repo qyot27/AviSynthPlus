@@ -1666,7 +1666,23 @@ static const std::multimap<int, std::string> pixel_format_table_ex =
   {VideoInfo::CS_YUVA411, "YUVA411P8"},
   {VideoInfo::CS_YUV410,  "YUV410P8"},
   {VideoInfo::CS_YUVA410, "YUVA410P8"},
-  {VideoInfo::CS_Y32, "YS"},
+  {VideoInfo::CS_Y32,  "YS"},
+  {VideoInfo::CS_YS,   "YF32"},
+  {VideoInfo::CS_YAS,  "YAF32"},
+  {VideoInfo::CS_YUV420PS,  "YUV420PF32"},
+  {VideoInfo::CS_YUV422PS,  "YUV422PF32"},
+  {VideoInfo::CS_YUV444PS,  "YUV444PF32"},
+  {VideoInfo::CS_RGBPS   ,  "RGBPF32"},
+  {VideoInfo::CS_YUVA420PS, "YUVA420PF32"},
+  {VideoInfo::CS_YUVA422PS, "YUVA422PF32"},
+  {VideoInfo::CS_YUVA444PS, "YUVA444PF32"},
+  {VideoInfo::CS_RGBAPS   , "RGBAPF32"},
+  {VideoInfo::CS_YUV440PS , "YUV440PF32"},
+  {VideoInfo::CS_YUVA440PS, "YUVA440PF32"},
+  {VideoInfo::CS_YUV411PS , "YUV411PF32"},
+  {VideoInfo::CS_YUVA411PS, "YUVA411PF32"},
+  {VideoInfo::CS_YUV410PS , "YUV410PF32"},
+  {VideoInfo::CS_YUVA410PS, "YUVA410PF32"}
 };
 
 const char *GetPixelTypeName(const int pixel_type)
