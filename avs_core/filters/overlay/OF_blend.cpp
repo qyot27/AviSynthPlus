@@ -62,7 +62,7 @@ static masked_merge_float_fn_t* get_overlay_blend_masked_float_fn(
 {
   MaskMode maskMode = MASK444;
   if (is_lumamask_based_chroma) {
-    if (vi_internal.IsYV411())
+    if (vi_internal.Is411())
       maskMode = MASK411;
     else if (vi_internal.Is420())
       maskMode = (placement == PLACEMENT_MPEG1) ? MASK420 : (placement == PLACEMENT_TOPLEFT) ? MASK420_TOPLEFT : MASK420_MPEG2;
@@ -91,7 +91,7 @@ static masked_merge_fn_t* get_overlay_blend_masked_fn(
 {
   MaskMode maskMode = MASK444;
   if (is_lumamask_based_chroma) {
-    if (vi_internal.IsYV411())
+    if (vi_internal.Is411())
       maskMode = MASK411;
     else if (vi_internal.Is420())
       maskMode = (placement == PLACEMENT_MPEG1) ? MASK420 : (placement == PLACEMENT_TOPLEFT) ? MASK420_TOPLEFT : MASK420_MPEG2;
@@ -325,8 +325,8 @@ void OL_BlendImage::BlendImageMask(ImageOverlayInternal* base, ImageOverlayInter
   // shared for both U and V.
   // Active when use444=false keeps vi_internal at 420/422/411 AND greymask=true.
   // Not active when use444=true or input is natively 444/RGB: vi_internal is then at full
-  // chroma resolution, Is420/Is422/IsYV411 == false, so is_subsampled = false.
-  const bool is_subsampled = vi_internal.Is420() || vi_internal.Is422() || vi_internal.IsYV411();
+  // chroma resolution, Is420/Is422/Is411 == false, so is_subsampled = false.
+  const bool is_subsampled = vi_internal.Is420() || vi_internal.Is422() || vi_internal.Is411();
   const bool use_scratch_path = greymask_mask && use_chroma_fn && is_subsampled;
 
   if constexpr (std::is_same_v<pixel_t, float>) {
@@ -351,7 +351,7 @@ void OL_BlendImage::BlendImageMask(ImageOverlayInternal* base, ImageOverlayInter
       // Scratch filled once per row, reused for all active chroma planes (U and V).
       if (planeindex_to >= 1) {
         MaskMode chroma_maskMode = MASK444;
-        if (vi_internal.IsYV411())
+        if (vi_internal.Is411())
           chroma_maskMode = MASK411;
         else if (vi_internal.Is420())
           chroma_maskMode = (placement == PLACEMENT_MPEG1) ? MASK420 : (placement == PLACEMENT_TOPLEFT) ? MASK420_TOPLEFT : MASK420_MPEG2;
@@ -457,7 +457,7 @@ void OL_BlendImage::BlendImageMask(ImageOverlayInternal* base, ImageOverlayInter
       // Scratch filled once per row, reused for all active chroma planes (U and V).
       if (planeindex_to >= 1) {
         MaskMode chroma_maskMode = MASK444;
-        if (vi_internal.IsYV411())
+        if (vi_internal.Is411())
           chroma_maskMode = MASK411;
         else if (vi_internal.Is420())
           chroma_maskMode = (placement == PLACEMENT_MPEG1) ? MASK420 : (placement == PLACEMENT_TOPLEFT) ? MASK420_TOPLEFT : MASK420_MPEG2;

@@ -1065,7 +1065,7 @@ ShowChannel::ShowChannel(PClip _child, const char* pixel_type, int _channel, ISc
         env->ThrowError("Show%s: width must be mod 2 for 4:2:2 target", ShowText[orig_channel]);
       }
     }
-    if (vi.IsYV411()) {
+    if (vi.Is411()) {
       if (vi.width & 3) {
         env->ThrowError("Show%s: width must be mod 4 for 4:1:1 target", ShowText[orig_channel]);
       }

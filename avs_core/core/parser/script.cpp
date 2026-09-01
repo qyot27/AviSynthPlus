@@ -2652,9 +2652,6 @@ AVSValue BuildPixelType(AVSValue args, void*, IScriptEnvironment* env)
   if(compat && bits != 8 && bits != 16)
     env->ThrowError("BuildPixelType error: 'compat'=true requires bits=8 or 16 for RGB(A).");
 
-  if(chroma == 411 && bits != 8)
-    env->ThrowError("BuildPixelType error: 411 is supported only for 8 bits.");
-
   if (compat) {
     if (isRGB && bits == 8)
       return "RGB24";
@@ -2688,7 +2685,7 @@ AVSValue BuildPixelType(AVSValue args, void*, IScriptEnvironment* env)
   }
 
   if (bits == 32)
-      format += (isY ? "32" : "S"); // no "YS", only "Y32"
+    format += (isY ? "32" : "S"); // no "YS", only "Y32", though the alias exists
   else
     format = format + std::to_string(bits);
 
@@ -2696,10 +2693,8 @@ AVSValue BuildPixelType(AVSValue args, void*, IScriptEnvironment* env)
     if (format == "YUV420" || format == "YUV420P8") format = "YV12";
     else if (format == "YUV422" || format == "YUV422P8") format = "YV16";
     else if (format == "YUV444" || format == "YUV444P8") format = "YV24";
+    else if (format == "YUV411" || format == "YUV411P8") format = "YV411";
   }
-
-  // 411 has no alternative naming
-  if (format == "YUV411") format = "YV411";
 
   return env->SaveString(format.c_str());
 }

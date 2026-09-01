@@ -228,6 +228,10 @@ GenericVideoFilter(_child), child444(nullptr) {
     // check if we can work in conversionless mode
     // 1.) colorspace is greyscale, 4:2:0 or 4:2:2 or any RGB
     // 2.) mode is "blend-like" (at the moment)
+    // Note/FIXME: 4:1:1 (and future 4:4:0/4:1:0) is intentionally excluded here.
+    // Thought blend kernels already dispatch MASK411 correctly, but for adding the
+    // is411() here would require implementing isInternal411/Convert444FromYV411/Convert444ToYV411
+    // and use them like isInternal420/isInternal422 is used.
     if (!vi.IsY() && !vi.Is420() && !vi.Is422() && !vi.IsRGB())
       env->ThrowError("Overlay: use444=false is allowed only for greyscale, 4:2:0, 4:2:2 or any RGB video formats");
     //if (output_pixel_format_override && outputVi->pixel_type != vi.pixel_type)
@@ -957,7 +961,7 @@ AVSValue __cdecl Overlay::Create(AVSValue args, void*, IScriptEnvironment* env) 
      AVSValue new_args[3] = { Result, false, Result->full_range ? "PC.601" : "rec601" };
      return env->Invoke("ConvertToYUV420", AVSValue(new_args, 3)).AsClip();
    }
-   if (Result->outputVi.IsYV411()) {
+   if (Result->outputVi.Is411()) {
      AVSValue new_args[3] = { Result, false, Result->full_range ? "PC.601" : "rec601" };
      return env->Invoke("ConvertToYUV411", AVSValue(new_args, 3)).AsClip();
    }

@@ -489,8 +489,10 @@ static void get_layer_yuv_lighten_darken_functions(bool isLighten, int placement
 
   if (isLighten) {
 
-    if (vi.IsYV411())
-      *layer_fn = layer_yuv_lighten_darken_c<LIGHTEN, MASK411, uint8_t, false /*lumaonly*/, false /*has_alpha*/>;
+    if (vi.Is411())
+    {
+      YUV_LIGHTEN_DARKEN_DISPATCH(LIGHTEN, MASK411, false, false)
+    }
     else if (vi.Is420())
     {
       if (placement == PLACEMENT_MPEG1)
@@ -518,9 +520,9 @@ static void get_layer_yuv_lighten_darken_functions(bool isLighten, int placement
   }
   else {
     // darken
-    if (vi.IsYV411())
-      *layer_fn = layer_yuv_lighten_darken_c<DARKEN, MASK411, uint8_t, false /*lumaonly*/, false /*has_alpha*/>;
-    else if (vi.Is420())
+    if (vi.Is411()) {
+      YUV_LIGHTEN_DARKEN_DISPATCH(DARKEN, MASK411, false, false)
+    } else if (vi.Is420())
     {
       if (placement == PLACEMENT_MPEG1)
         YUV_LIGHTEN_DARKEN_DISPATCH(DARKEN, MASK420, false, false)
@@ -566,10 +568,14 @@ static void get_layer_yuv_mul_functions(
 
   if (is_chroma) // not luma channel
   {
-    if (vi.IsYV411())
+    if (vi.Is411())
     {
-      // never has Alpha
-      *layer_fn = layer_yuv_mul_c<MASK411, uint8_t, true, false>;
+      if (hasAlpha) {
+        YUV_MUL_DISPATCH(MASK411, true, true)
+      }
+      else {
+        YUV_MUL_DISPATCH(MASK411, true, false)
+      }
     }
     else if (vi.Is420())
     {
@@ -866,8 +872,8 @@ static void get_layer_yuv_mulovr_functions(
     // Greyscale: no UV planes — luma-only pass, identical to Layer "Mul" luma.
     MULOVR_HA(MASK444, true)
   }
-  else if (vi.IsYV411()) {
-    MULOVR_DISPATCH(MASK411, false, false) // YV411 never has alpha
+  else if (vi.Is411()) {
+    MULOVR_HA(MASK411, false)
   }
   else if (vi.Is420()) {
     if      (placement == PLACEMENT_MPEG1)    { MULOVR_HA(MASK420,         false) }
@@ -899,7 +905,7 @@ static void get_layer_yuv_add_masked_functions(
   // Determine MaskMode from format and placement
   MaskMode maskMode = MASK444;
   if (is_chroma) {
-    if (vi.IsYV411())
+    if (vi.Is411())
       maskMode = MASK411;
     else if (vi.Is420())
       maskMode = (placement == PLACEMENT_MPEG1) ? MASK420 : (placement == PLACEMENT_TOPLEFT) ? MASK420_TOPLEFT : MASK420_MPEG2;

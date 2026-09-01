@@ -1203,8 +1203,8 @@ ConvertBits::ConvertBits(PClip _child, const int _dither_mode, const int _target
   if (target_bitdepth == 8) {
     if (vi.NumComponents() == 1)
       vi.pixel_type = VideoInfo::CS_Y8;
-    else if (vi.IsYV411())
-      vi.pixel_type = VideoInfo::CS_YV411;
+    else if (vi.Is411())
+      vi.pixel_type = vi.IsYUVA() ? VideoInfo::CS_YUVA411 : VideoInfo::CS_YV411;
     else if (vi.Is420() || vi.IsYV12())
       vi.pixel_type = vi.IsYUVA() ? VideoInfo::CS_YUVA420 : VideoInfo::CS_YV12;
     else if (vi.Is422())
@@ -1252,6 +1252,8 @@ ConvertBits::ConvertBits(PClip _child, const int _dither_mode, const int _target
   else if (target_bitdepth == 32) {
     if (vi.NumComponents() == 1)
       vi.pixel_type = VideoInfo::CS_Y32;
+    else if (vi.Is411())
+      vi.pixel_type = vi.IsYUVA() ? VideoInfo::CS_YUVA411PS : VideoInfo::CS_YUV411PS;
     else if (vi.Is420())
       vi.pixel_type = vi.IsYUVA() ? VideoInfo::CS_YUVA420PS : VideoInfo::CS_YUV420PS;
     else if (vi.Is422())
@@ -1421,11 +1423,6 @@ AVSValue __cdecl ConvertBits::Create(AVSValue args, void* user_data, IScriptEnvi
   if (vi.IsYUY2()) {
     if (target_bitdepth != 8)
       env->ThrowError("ConvertBits: YUY2 input must stay in 8 bits");
-  }
-
-  if (vi.IsYV411()) {
-    if (target_bitdepth != 8)
-      env->ThrowError("ConvertBits: YV411 input must stay in 8 bits");
   }
 
   // packed RGB conversion is limited
