@@ -118,21 +118,30 @@ ConvertToXXXX function
          int bits, bool quality] )
 
 
-*YUV411*
+*YUV411, YUVA411*
 ::
 
     ConvertToYV411(clip [, bool interlaced, string matrix,
          string ChromaInPlacement,
          string chromaresample,
+         string ChromaOutPlacement,
          float param1, float param2, float param3,
          int bits, bool quality] )
-    ConvertToYUV411(clip [, bool interlaced, string matrix,
+    ConvertToYUV411(clip, [ string matrix, bool interlaced,
          string ChromaInPlacement,
          string chromaresample,
+         string ChromaOutPlacement,
+         float param1, float param2, float param3,
+         int bits, bool quality] )
+    ConvertToYUVA411(clip, [ string matrix, bool interlaced,
+         string ChromaInPlacement,
+         string chromaresample,
+         string ChromaOutPlacement,
          float param1, float param2, float param3,
          int bits, bool quality] )
 
-(the 2nd one is just an alias)
+(``ConvertToYV411`` is the 8-bit-only legacy name; ``ConvertToYUV411`` is the same
+conversion at any bit depth.)
 
 *Y-only*
 ::
@@ -180,7 +189,9 @@ Notes:
 +----------------+-----------+--------------+---------------------------------------------------------------+-------------+
 | YUVA420Pxx     | 8-16, 32  | 4:2:0:4      | chroma shared between 2x2 pixels + alpha                      | planar      |
 +----------------+-----------+--------------+---------------------------------------------------------------+-------------+
-| YV411,YUV411P8 | 8         | 4:1:1        | chroma shared between 4 pixels                                | planar      |
+| YV411,YUV411Pxx| 8-16, 32  | 4:1:1        | chroma shared between 4 pixels                                | planar      |
++----------------+-----------+--------------+---------------------------------------------------------------+-------------+
+| YUVA411Pxx     | 8-16, 32  | 4:1:1:4      | chroma shared between 4 pixels + alpha                        | planar      |
 +----------------+-----------+--------------+---------------------------------------------------------------+-------------+
 | Y8,Y10-16,Y32  | 8-16, 32  | 4:0:0        | no chroma                                                     | both        |
 +----------------+-----------+--------------+---------------------------------------------------------------+-------------+
@@ -194,8 +205,9 @@ When the target format is the same as the source format, the original clip will 
 except for the cases where the ``ChromaInPlacement`` and ``ChromaOutPlacement`` parameters are different,
 or the target placement is different from the source chroma placement read from ``_ChromaLocation`` frame property.
 
-Such functions are ``ConvertToYV12``/``ConvertToYUV420``/``ConvertToYUVA420`` or 
-``ConvertToYV16``/``ConvertToYUV422``/``ConvertToYUVA422``.
+Such functions are ``ConvertToYV12``/``ConvertToYUV420``/``ConvertToYUVA420`` or
+``ConvertToYV16``/``ConvertToYUV422``/``ConvertToYUVA422`` or
+``ConvertToYV411``/``ConvertToYUV411``/``ConvertToYUVA411``.
 
 ``ConvertToRGB`` (without numeric suffix) is adaptive:
 
@@ -481,8 +493,8 @@ Syntax and parameters
     
     string  ChromaOutPlacement = "MPEG2"
 
-    ChromaInPlacement determines the chroma placement in the clip when converting from YV12/YUV420 or YV16/YUV422.
-    ChromaOutPlacement determines the chroma placement in the clip when converting to YV12/YUV420 or YV16/YUV422.
+    ChromaInPlacement determines the chroma placement in the clip when converting from YV12/YUV420, YV16/YUV422 or YV411/YUV411.
+    ChromaOutPlacement determines the chroma placement in the clip when converting to YV12/YUV420, YV16/YUV422 or YV411/YUV411.
     
     The placement can be one of these strings: 
 
@@ -562,7 +574,8 @@ Syntax and parameters
 Frame properties
 ----------------
 
-Since Avisynth v3.7.1 frame property (_ChromaLocation) support appears in selected filters (e.g. ConvertToYUV422). 
+Since Avisynth v3.7.1 frame property (_ChromaLocation) support appears in selected filters
+(e.g. ConvertToYUV420, ConvertToYUV422, ConvertToYUV411).
 Property can be read and/or set. A frame property can replace default behaviour of location parameters and is set 
 (or deleted) upon finishing conversion. Since a format without subsampling - such as 4:4:4 (YV24) - does not have 
 chroma location, the property is deleted automatically when converting to YUV444 or RGB.
@@ -686,6 +699,9 @@ Color conversions
 | v3.7.6   || Add "quality" parameter to ConvertToXXXX                  |
 |          || Add "bits" parameter to ConvertToXXXX                     |
 |          || Document ":same" in matrix specifier                      |
+|          || Extend YUV411 to all bit depths; add ConvertToYUVA411     |
+|          || Add ChromaOutPlacement to 4:1:1 (YUV411/YUVA411) functions|
+|          || 4:1:1 ChromaInPlacement: allow "center"; default to "left"|
 +----------+------------------------------------------------------------+
 | v3.7.3   || Added "sinpow",  "sinclin2" and "userdefined2" to         |
 |          |  chromaresampler options                                   |
