@@ -80,7 +80,7 @@ void get_layer_yuv_masked_add_functions_neon(
 {
   MaskMode maskMode = MASK444;
   if (is_chroma) {
-    if (vi.IsYV411())
+    if (vi.Is411())
       maskMode = MASK411;
     else if (vi.Is420())
       maskMode = (placement == PLACEMENT_MPEG1) ? MASK420 : (placement == PLACEMENT_TOPLEFT) ? MASK420_TOPLEFT : MASK420_MPEG2;

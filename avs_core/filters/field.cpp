@@ -116,8 +116,8 @@ SeparateColumns::SeparateColumns(PClip _child, int _interval, IScriptEnvironment
     env->ThrowError("SeparateColumns: YUV420 output width must be even.");
   if (vi.Is422() && vi.width & 1)
     env->ThrowError("SeparateColumns: YUV422 output width must be even.");
-  if (vi.IsYV411() && vi.width & 3)
-    env->ThrowError("SeparateColumns: YV411 output width must be mod 4.");
+  if (vi.Is411() && vi.width & 3)
+    env->ThrowError("SeparateColumns: YUV411 output width must be mod 4.");
 }
 
 

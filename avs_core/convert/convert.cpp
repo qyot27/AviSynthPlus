@@ -442,8 +442,8 @@ AddAlphaPlane::AddAlphaPlane(PClip _child, PClip _alphaClip, float _mask_f, bool
     env->ThrowError("AddAlphaPlane: YUY2 is not allowed");
   if(vi.IsY())
     env->ThrowError("AddAlphaPlane: greyscale source is not allowed");
-  if(vi.IsYUV() && !vi.Is420() && !vi.Is422() && !vi.Is444()) // e.g. 410
-    env->ThrowError("AddAlphaPlane: YUV format not supported, must be 420, 422 or 444");
+  if(vi.IsYUV() && !vi.Is411() && !vi.Is420() && !vi.Is422() && !vi.Is444()) // e.g. 410
+    env->ThrowError("AddAlphaPlane: YUV format not supported, must be 411, 420, 422 or 444");
   if(!vi.IsYUV() && !vi.IsYUVA() && !vi.IsRGB())
     env->ThrowError("AddAlphaPlane: format not supported");
 
