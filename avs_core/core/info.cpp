@@ -2052,7 +2052,7 @@ static void DrawString_internal(BitmapFont* current_font, const VideoInfo& vi, P
   const int bits_per_pixel = vi.BitsPerComponent();
 
   // narrow down valid chroma choices, ignoring and moving to default what is not supported at the moment
-  if (vi.IsYV411()) {
+  if (vi.Is411()) {
     // ignored, always left
     chromalocation = ChromaLocation_e::AVS_CHROMA_LEFT;
   }

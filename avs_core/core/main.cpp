@@ -1088,7 +1088,7 @@ STDMETHODIMP_(LONG) CAVIStreamSynth::Info(AVISTREAMINFOW *psi, LONG lSize) {
       else // all 8+ bit planar RGB(A) is converted to RGB64
         vi_final.pixel_type = VideoInfo::CS_BGR64;
     }
-    // silent mapping of 12/14 bit YUV formats to 16 bit
+    // silent mapping of 12/14/32F bit YUV formats to 16 bit
     if (vi->pixel_type == VideoInfo::CS_YUV420P12 || vi->pixel_type == VideoInfo::CS_YUV420P14 || vi->pixel_type == VideoInfo::CS_YUV420PS)
       vi_final.pixel_type = VideoInfo::CS_YUV420P16;
     else if (vi->pixel_type == VideoInfo::CS_YUV422P12 || vi->pixel_type == VideoInfo::CS_YUV422P14 || vi->pixel_type == VideoInfo::CS_YUV422PS)
@@ -1097,6 +1097,9 @@ STDMETHODIMP_(LONG) CAVIStreamSynth::Info(AVISTREAMINFOW *psi, LONG lSize) {
       vi_final.pixel_type = VideoInfo::CS_YUV444P16;
     else if (vi->pixel_type == VideoInfo::CS_YUVA444P10 || vi->pixel_type == VideoInfo::CS_YUVA444P12 || vi->pixel_type == VideoInfo::CS_YUVA444P14 || vi->pixel_type == VideoInfo::CS_YUVA444PS)
       vi_final.pixel_type = VideoInfo::CS_YUVA444P16;
+    // Silent mapping of >8 bit YUV 4:1:1 formats to 8-bit
+    else if (vi->BitsPerComponent() > 8 && vi->Is411())
+      vi_final.pixel_type = VideoInfo::CS_YUV411;
     // -- pixel_type change end
 
     const int image_size = parent->ImageSize(&vi_final);
@@ -1212,6 +1215,14 @@ void CAVIStreamSynth::ReadFrame(void* lpBuffer, int n) {
   {
     // silent mapping of 12/14bit/float YUV420/422 formats to 16 bits
     AVSValue new_args[2] = { parent->filter_graph, 16 };
+    PClip newClip = parent->env->Invoke("ConvertBits", AVSValue(new_args, 2)).AsClip();
+    frame = newClip->GetFrame(n, parent->env);
+    vi = newClip->GetVideoInfo();
+  }
+  else if (vi.Is411() && vi.BitsPerComponent() > 8) {
+    // silent mapping of >8 bit YUV 4:1:1 formats to 8 bits.
+    // Check also: fccHandler/ImageSize downgrade to YV411 already done in GetStreamInfo()
+    AVSValue new_args[2] = { parent->filter_graph, 8 };
     PClip newClip = parent->env->Invoke("ConvertBits", AVSValue(new_args, 2)).AsClip();
     frame = newClip->GetFrame(n, parent->env);
     vi = newClip->GetVideoInfo();
@@ -1472,6 +1483,10 @@ HRESULT CAVIStreamSynth::Read2(LONG lStart, LONG lSamples, LPVOID lpBuffer, LONG
     vi_final.pixel_type = VideoInfo::CS_YUV444P16;
   else if (vi->pixel_type == VideoInfo::CS_YUVA444P10 || vi->pixel_type == VideoInfo::CS_YUVA444P12 || vi->pixel_type == VideoInfo::CS_YUVA444P14 || vi->pixel_type == VideoInfo::CS_YUVA444PS)
     vi_final.pixel_type = VideoInfo::CS_YUVA444P16;
+  // Silent mapping of >8 bit YUV 4:1:1 formats to 8-bit
+  // See also ReadFrame() and GetStreamInfo()
+  else if (vi->BitsPerComponent() > 8 && vi->Is411())
+    vi_final.pixel_type = VideoInfo::CS_YUV411;
   // -- pixel_type change end
 
   if (fAudio) {
@@ -1655,6 +1670,10 @@ STDMETHODIMP CAVIStreamSynth::ReadFormat(LONG lPos, LPVOID lpFormat, LONG *lpcbF
       vi_final.pixel_type = VideoInfo::CS_YUV444P16;
     else if (vi->pixel_type == VideoInfo::CS_YUVA444P10 || vi->pixel_type == VideoInfo::CS_YUVA444P12 || vi->pixel_type == VideoInfo::CS_YUVA444P14 || vi->pixel_type == VideoInfo::CS_YUVA444PS)
       vi_final.pixel_type = VideoInfo::CS_YUVA444P16;
+    // Silent mapping of >8 bit YUV 4:1:1 formats to 8-bit
+    // See also ReadFrame()/Read2()/GetStreamInfo()
+    else if (vi->BitsPerComponent() > 8 && vi->Is411())
+      vi_final.pixel_type = VideoInfo::CS_YUV411;
     // -- pixel_type change end
 
     BITMAPINFOHEADER bi;

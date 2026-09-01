@@ -328,8 +328,10 @@ void Antialiaser::Apply(const VideoInfo& vi, PVideoFrame* frame, int pitch)
     if ((vi.IsYUV() || vi.IsYUVA()) && !vi.IsY()) {
       const int sx = vi.GetPlaneWidthSubsampling(PLANAR_U);
       const int sy = vi.GetPlaneHeightSubsampling(PLANAR_U);
-      if (sx == 2) {
-        mode = MASK411; // always center averaging
+      if (sx == 0 && sy == 0) {
+        mode = MASK444;
+      } else if (sx == 2 && sy == 0) {
+        mode = MASK411; // always center averaging, regardless of left/center chroma placement
       } else if (sx == 1 && sy == 1) {
         switch (chromaplacement) {
         case ChromaLocation_e::AVS_CHROMA_LEFT: mode = MASK420_MPEG2;   break;
@@ -342,6 +344,9 @@ void Antialiaser::Apply(const VideoInfo& vi, PVideoFrame* frame, int pitch)
         case ChromaLocation_e::AVS_CHROMA_TOP_LEFT: mode = MASK422_TOPLEFT; break;
         default: mode = MASK422; break; // center
         }
+      } else {
+        // not yet supported, e.g. future 4:4:0 sx==0,sy==1 or 4:1:0 sx==2,sy==2
+        throw AvisynthError("Antialiaser::Apply: unsupported chroma subsampling for text overlay");
       }
     }
     switch (mode) {
@@ -1390,15 +1395,12 @@ AVSValue __cdecl Subtitle::Create(AVSValue args, void*, IScriptEnvironment* env)
 
     VideoInfo vi = clip->GetVideoInfo();
     int ChromaLocation_In = -1;
-    if (vi.IsYV411()) {
+    if (vi.Is411() || vi.Is420() || vi.Is422() || vi.IsYUY2()) {
       auto frame0 = clip->GetFrame(0, env);
       const AVSMap* props = env->getFramePropsRO(frame0);
-      chromaloc_parse_merge_with_props(vi, placement_name, props, ChromaLocation_In, -1, env);
-    }
-    else if (vi.Is420() || vi.Is422() || vi.IsYUY2()) {
-      auto frame0 = clip->GetFrame(0, env);
-      const AVSMap* props = env->getFramePropsRO(frame0);
-      chromaloc_parse_merge_with_props(vi, placement_name, props, ChromaLocation_In, ChromaLocation_e::AVS_CHROMA_LEFT, env);
+      // Note: Antialiaser::Apply always center averages 411 regardless of placement
+      const int chromaloc_default = ChromaLocation_e::AVS_CHROMA_LEFT;
+      chromaloc_parse_merge_with_props(vi, placement_name, props, ChromaLocation_In, chromaloc_default, env);
     }
 
     if ((align < 1) || (align > 9))
@@ -1825,17 +1827,13 @@ AVSValue __cdecl SimpleText::Create(AVSValue args, void*, IScriptEnvironment* en
   // "Text" filter will ignore invalid/not used definitions and use its defaults
   int ChromaLocation_In = -1; // invalid
 
-  if (vi.IsYV411()) {
-    // placement parameter exists, (default none/-1) + input frame properties; 'left'-ish _ChromaLocation is allowed, checked later
+  if (vi.Is411() || vi.Is420() || vi.Is422() || vi.IsYUY2()) {
+    // placement parameter is valid + input frame properties.
+    // Note: Antialiaser::Apply always center averages 411 regardless of placement
     auto frame0 = clip->GetFrame(0, env);
     const AVSMap* props = env->getFramePropsRO(frame0);
-    chromaloc_parse_merge_with_props(vi, placement_name, props, /* ref*/ChromaLocation_In, -1 /*default none chromaloc */, env);
-  }
-  else if (vi.Is420() || vi.Is422() || vi.IsYUY2()) {
-    // placement parameter is valid + input frame properties
-    auto frame0 = clip->GetFrame(0, env);
-    const AVSMap* props = env->getFramePropsRO(frame0);
-    chromaloc_parse_merge_with_props(vi, placement_name, props, /* ref*/ChromaLocation_In, ChromaLocation_e::AVS_CHROMA_LEFT /*default*/, env);
+    const int chromaloc_default = ChromaLocation_e::AVS_CHROMA_LEFT;
+    chromaloc_parse_merge_with_props(vi, placement_name, props, /* ref*/ChromaLocation_In, chromaloc_default, env);
   }
 
   return new SimpleText(clip, text, real_x, real_y, first_frame, last_frame, font, size, text_color,

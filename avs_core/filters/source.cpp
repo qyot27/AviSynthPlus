@@ -372,7 +372,7 @@ static AVSValue __cdecl Create_BlankClip(AVSValue args, void*, IScriptEnvironmen
       if(pixel_type == VideoInfo::CS_UNKNOWN)
       {
           env->ThrowError("BlankClip: pixel_type must be \"RGB32\", \"RGB24\", \"YV12\", \"YV24\", \"YV16\", \"Y8\", \n"\
-              "\"YUV420P?\",\"YUV422P?\",\"YUV444P?\",\"Y?\",\n"\
+              "\"YUV411P?\",\"YUV420P?\",\"YUV422P?\",\"YUV444P?\",\"Y?\",\n"\
               "\"RGB48\",\"RGB64\",\"RGBP\",\"RGBP?\",\n"\
               "\"YV411\" or \"YUY2\"");
       }
@@ -2310,7 +2310,7 @@ public:
       if (w & 1)
         env->ThrowError("ColorBars: for 4:2:2 width must be even!");
     }
-    else if (vi.IsYV411()) { // 4:1:1
+    else if (vi.Is411()) { // 4:1:1
       if (w & 3)
         env->ThrowError("ColorBars: for 4:1:1 width must be divisible by 4!");
     }
@@ -2525,14 +2525,18 @@ public:
         else
           draw_colorbars_yuv<float, false, true, false>(pY, pU, pV, pitchY, pitchUV, w, h, 32);
       }
-      else if (vi.IsYV411()) {
+      else if (vi.Is411()) {
         BYTE* pY = (BYTE*)frame->GetWritePtr(PLANAR_Y);
         BYTE* pU = (BYTE*)frame->GetWritePtr(PLANAR_U);
         BYTE* pV = (BYTE*)frame->GetWritePtr(PLANAR_V);
         const int pitchY = frame->GetPitch(PLANAR_Y);
         const int pitchUV = frame->GetPitch(PLANAR_U);
-        // YV411 is 8-bit only
-        draw_colorbars_yuv<uint8_t, false, false, true>(pY, pU, pV, pitchY, pitchUV, w, h, 8);
+        if (bits_per_pixel == 8)
+          draw_colorbars_yuv<uint8_t, false, false, true>(pY, pU, pV, pitchY, pitchUV, w, h, 8);
+        else if (bits_per_pixel <= 16)
+          draw_colorbars_yuv<uint16_t, false, false, true>(pY, pU, pV, pitchY, pitchUV, w, h, bits_per_pixel);
+        else
+          draw_colorbars_yuv<float, false, false, true>(pY, pU, pV, pitchY, pitchUV, w, h, 32);
       }
     } // "ColorBars" pattern generation
     else {
