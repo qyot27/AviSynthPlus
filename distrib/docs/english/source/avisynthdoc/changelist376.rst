@@ -3,7 +3,24 @@ Changes from 3.7.5 to 3.7.6
 
 Additions, changes
 ~~~~~~~~~~~~~~~~~~
-- New array syntax: 
+- Added new pixel format constants
+
+  * YUV(A) 4:4:0(:α) 8~32bits
+  * YV411 aliased to more standard YUV411 naming
+  * YUV 4:1:1 10~32bits
+  * YUVA 4:1:1:α 8~32bits
+  * Y plus alpha 4:0:0:α 8~32bits
+  * YUV9 (added in 2.6 but not used except in the constants list) aliased to more standard YUV410 naming
+  * YUV 4:1:0 10~32bits
+  * YUVA 4:1:0:α 8~32bits
+
+- VfW: 8-bit Y plus alpha (``YA8``) clips are now served with the ``Y2[0][8]`` FourCC
+  (a packed Y,A interleaved layout; matches ffmpeg's ``AV_PIX_FMT_YA8``).
+
+- Added ``ConvertToYA``, besides ``ConvertToY``, mirroring the existing
+  ``ConvertToYUVxxx``/``ConvertToYUVAxxx`` pairs.
+
+- New array syntax:
 
   * dictionary-style ArraySet (replaces or appends).
   * dictionary-style ArrayDel (deletes by key, no-op if not found).
@@ -182,6 +199,7 @@ Additions, changes
 
 Build environment, Interface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Bump to interface version 13 for new color constants
 - introduce ``AVS_RESTRICT`` to ``avs/config.h`` (compiler invariant c++ ``__restrict``)
 - AVX512: CMake to recognize ``*_avx512b.*`` and ``*_avx512.*`` file pattern, add compiler specific AVX512 
   compile flags accordingly (AVX512 Base and Ice Lake extensions)
@@ -363,6 +381,8 @@ Bugfixes
   As a side effect, also added finer opacity-granularity over 8 bits at integer formats.
 - Fix: ``ArrayIns``/``ArraySet``/``ArrayDel``: bounds check the index parameter(s)
   (preventing Access Violation).
+- Fix: "TurnLeft"/"TurnRight": for asymmetrically H/V-subsampled sources (4:2:2, 4:1:1, 4:4:0),
+  the mod-alignment check (before-after dimension rules)
 
 
 Optimizations
@@ -468,7 +488,7 @@ Documentation
 - Update :doc:`Overlay <./corefilters/overlay>` with ``"placement"`` parameter for ``"blend"`` mode.
 - Update :doc:`Arrays <./script_ref/script_ref_arrays>` with dictionary-style key lookup/set/delete
   (``ArrayGet``, ``ArraySet``, ``ArrayDel``) and the new ``ArrayIndexOf``.
-
+- Add :doc:`BuildPixelType <./corefilters/buildpixeltype>`
 
 Please report bugs at `github AviSynthPlus page`_ - or - `Doom9's AviSynth+
 forum`_
